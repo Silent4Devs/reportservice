@@ -1,0 +1,263 @@
+[
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "psycopg2",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "psycopg2",
+        "description": "psycopg2",
+        "detail": "psycopg2",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "JSONResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "JSONResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "cursor",
+        "importPath": "config.database",
+        "description": "config.database",
+        "isExtraImport": true,
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "reports",
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "isExtraImport": true,
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "DBHOST",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "DBHOST = os.getenv(\"DB_HOST\")\nDBPORT = os.getenv(\"DB_PORT\")\nDBNAME = os.getenv(\"DB_NAME\")\nDBUSER = os.getenv(\"DB_USER\")\nDBPASS = os.getenv(\"DB_PASS\")\nconexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "DBPORT",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "DBPORT = os.getenv(\"DB_PORT\")\nDBNAME = os.getenv(\"DB_NAME\")\nDBUSER = os.getenv(\"DB_USER\")\nDBPASS = os.getenv(\"DB_PASS\")\nconexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,\n    port=DBPORT",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "DBNAME",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "DBNAME = os.getenv(\"DB_NAME\")\nDBUSER = os.getenv(\"DB_USER\")\nDBPASS = os.getenv(\"DB_PASS\")\nconexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,\n    port=DBPORT\n)",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "DBUSER",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "DBUSER = os.getenv(\"DB_USER\")\nDBPASS = os.getenv(\"DB_PASS\")\nconexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,\n    port=DBPORT\n)\ncursor = conexion.cursor()",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "DBPASS",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "DBPASS = os.getenv(\"DB_PASS\")\nconexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,\n    port=DBPORT\n)\ncursor = conexion.cursor()\n# URL_DATABASE = f\"postgresql://{DBUSER}:{DBPASS}@{DBHOST}:{DBPORT}/{DBNAME}\"",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "conexion",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "conexion = psycopg2.connect(\n    dbname=DBNAME,\n    user=DBUSER,\n    password=DBPASS,\n    host=DBHOST,\n    port=DBPORT\n)\ncursor = conexion.cursor()\n# URL_DATABASE = f\"postgresql://{DBUSER}:{DBPASS}@{DBHOST}:{DBPORT}/{DBNAME}\"\n# engine = create_engine(URL_DATABASE)",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "cursor",
+        "kind": 5,
+        "importPath": "config.database",
+        "description": "config.database",
+        "peekOfCode": "cursor = conexion.cursor()\n# URL_DATABASE = f\"postgresql://{DBUSER}:{DBPASS}@{DBHOST}:{DBPORT}/{DBNAME}\"\n# engine = create_engine(URL_DATABASE)\n# meta = MetaData()\n# conn = engine.connect()",
+        "detail": "config.database",
+        "documentation": {}
+    },
+    {
+        "label": "getEmpleados",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def getEmpleados():\n    return {\"message\": \"empleados\"}\n# Corrected route name to match the SQL query route\n@reports.get('/getUsers', tags=[\"ReportsXls\"])\ndef retrieve_all_item():\n    query = \"SELECT * FROM ussers\"\n    resultados = ejecutar_consulta_sql(cursor, query)\n    exportar_a_excel(resultados, \"reportsfile/empleados/users.xlsx\")\n# Corrected route name to match the SQL query route\n@reports.get('/empleadosPuestos', tags=[\"ReportsXls\"])",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "retrieve_all_item",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def retrieve_all_item():\n    query = \"SELECT * FROM ussers\"\n    resultados = ejecutar_consulta_sql(cursor, query)\n    exportar_a_excel(resultados, \"reportsfile/empleados/users.xlsx\")\n# Corrected route name to match the SQL query route\n@reports.get('/empleadosPuestos', tags=[\"ReportsXls\"])\ndef getEmpleadosPuestos():\n    query = \"\"\"\n            SELECT\n                e.name AS empleado,",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "getEmpleadosPuestos",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def getEmpleadosPuestos():\n    query = \"\"\"\n            SELECT\n                e.name AS empleado,\n                s.name AS supervisor,\n                a.area AS area,\n                p.puesto AS puesto\n            FROM\n                empleados e\n                LEFT JOIN empleados s ON e.supervisor_id=s.id",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "ejecutar_consulta_sql",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def ejecutar_consulta_sql(cursor, consulta):\n    try:\n        cursor.execute(consulta)\n        resultados = cursor.fetchall()\n        return resultados\n    except psycopg2.Error as e:\n        print(\"Error al ejecutar la consulta SQL:\", e)\n        return JSONResponse(content={\"message\": \"Error al ejecutar la consulta SQL.\"})\ndef exportar_a_excel(resultados, nombre_archivo):\n    try:",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "exportar_a_excel",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def exportar_a_excel(resultados, nombre_archivo):\n    try:\n        if resultados is not None:\n            df = pd.DataFrame(resultados, columns=[\n                desc[0] for desc in cursor.description])\n            df.to_excel(nombre_archivo, index=False)\n            print(\"Resultados exportados a\", nombre_archivo)\n    except Exception as e:\n        print(\"No se pudieron exportar los resultados a Excel debido a un error.\")\n        return JSONResponse(content={\"message\": \"Error al ejecutar la consulta SQL.\"})",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "reports",
+        "kind": 5,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "reports = APIRouter()\n@reports.get('/empleados', tags=[\"ReportsXls\"])\ndef getEmpleados():\n    return {\"message\": \"empleados\"}\n# Corrected route name to match the SQL query route\n@reports.get('/getUsers', tags=[\"ReportsXls\"])\ndef retrieve_all_item():\n    query = \"SELECT * FROM ussers\"\n    resultados = ejecutar_consulta_sql(cursor, query)\n    exportar_a_excel(resultados, \"reportsfile/empleados/users.xlsx\")",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "message",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def message():\n    return {\"Hello, World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "movies",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "app = FastAPI()\napp.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello, World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "app.title",
+        "kind": 5,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "app.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello, World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "app.version",
+        "kind": 5,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "app.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello, World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "detail": "main",
+        "documentation": {}
+    }
+]
