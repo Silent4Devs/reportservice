@@ -7,12 +7,18 @@ from pathlib import Path
 from fastapi import HTTPException
 from datetime import date
 from datetime import datetime
+import os
 
 reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
-now = date.today()
 
+# Validar si la carpeta ya existe
+if not os.path.exists(DirectoryEmpleados):
+    # Si no existe, crear la carpeta
+    os.makedirs(DirectoryEmpleados)
+
+now = date.today()
 
 @reports.get('/empleados', tags=["ReportsXls"])
 def getEmpleados():
