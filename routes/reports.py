@@ -1,10 +1,24 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from config.database import cursor
 import pandas as pd
 import psycopg2
+from pathlib import Path
+from fastapi import HTTPException
+from datetime import date
+from datetime import datetime
+import os
+
 reports = APIRouter()
 
+DirectoryEmpleados = "reportsfile/administracion/empleados/"
+
+# Validar si la carpeta ya existe
+if not os.path.exists(DirectoryEmpleados):
+    # Si no existe, crear la carpeta
+    os.makedirs(DirectoryEmpleados)
+
+now = date.today()
 
 @reports.get('/empleados', tags=["ReportsXls"])
 def getEmpleados():
@@ -37,7 +51,14 @@ def retrieve_all_item():
         """
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    exportar_a_excel(resultados, "reportsfile/empleados/users.xlsx")
+    fileRoute = DirectoryEmpleados + "users" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 
 # Empleados
@@ -60,6 +81,7 @@ def getEmpleadosPuestos():
                 empleado ASC;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "empleadosPuestos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, "reportsfile/empleados/empleadosPuestos.xlsx")
     
@@ -176,8 +198,10 @@ def ejecutar_consulta_sql(cursor, consulta):
         resultados = cursor.fetchall()
         return resultados
     except psycopg2.Error as e:
-        print("Error al ejecutar la consulta SQL:", e)
-        return JSONResponse(content={"message": "Error al ejecutar la consulta SQL."})
+        print("Error al ejecutar la consulta SQL:" + str(e))
+        # return JSONResponse(content={"message": "Error al ejecutar la consulta SQL."})
+        raise HTTPException(
+            status_code=500, detail="Error executing SQL query: " + str(e))
 
 
 def exportar_a_excel(resultados, nombre_archivo):
@@ -188,5 +212,6 @@ def exportar_a_excel(resultados, nombre_archivo):
             df.to_excel(nombre_archivo, index=False)
             print("Resultados exportados a", nombre_archivo)
     except Exception as e:
-        print("No se pudieron exportar los resultados a Excel debido a un error.")
-        return JSONResponse(content={"message": "Error al ejecutar la consulta SQL."})
+        print("No se pudieron exportar los resultados a Excel debido a un error." + str(e))
+        raise HTTPException(
+            status_code=500, detail="Report error: " + str(e))
