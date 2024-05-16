@@ -4,6 +4,8 @@ FROM python:3.12-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+COPY .env.example .env
+
 # Copy the requirements file to the working directory
 COPY requirements.txt .
 
