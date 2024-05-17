@@ -100,8 +100,14 @@ def getPuestos():
             p.deleted_at IS NULL; 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "puestos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/empleados/Puestos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
     
 ## Roles
 @reports.get('/Roles', tags=["ReportsXls"])
