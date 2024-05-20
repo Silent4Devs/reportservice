@@ -162,3 +162,5 @@ cython_debug/
 
 
 reportsfile/administracion/empleados/
+
+*.pyc

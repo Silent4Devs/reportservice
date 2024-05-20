@@ -43,8 +43,7 @@ def retrieve_all_item():
             inner join areas a ON e.area_id=a.id
             inner join puestos p ON e.puesto_id =p.id
 
-            where 
-            r.deleted_at IS null
+            where r.deleted_at IS null
 
             order by 
             name asc;
@@ -61,32 +60,33 @@ def retrieve_all_item():
     return FileResponse(excel_path)
 
 
-# Empleados
+# Empleados Puestos
 @reports.get('/empleadosPuestos', tags=["ReportsXls"])
-def getEmpleadosPuestos():
+def getempleadosPuestos():
     query = """
-            SELECT
-                e.name AS empleado,
-                s.name AS supervisor,
-                a.area AS area,
-                p.puesto AS puesto
-            FROM
-                empleados e
-                LEFT JOIN empleados s ON e.supervisor_id=s.id
-                INNER JOIN areas a ON e.area_id=a.id
-                INNER JOIN puestos p ON e.puesto_id =p.id
-            WHERE
-                e.deleted_at IS NULL AND e.estatus='alta'
-            ORDER BY
-                empleado ASC;
+            select 
+            e.name as empleado,
+            s.name as supervisor,
+            a.area as area,
+            p.puesto as puesto
+
+            from empleados e
+
+            left join empleados s on e.supervisor_id=s.id
+            inner join areas a on e.area_id=a.id
+            inner join  puestos p on e.puesto_id =p.id
+
+            where e.deleted_at is null and e.estatus='alta'
+
+            order by empleado asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "empleadosPuestos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/empleados/empleadosPuestos.xlsx")
+        resultados, "reportsfile/administracion/empleados/empleadosPuestos.xlsx")
     
 ## Puestos
-@reports.get('/Puestos', tags=["ReportsXls"])
+@reports.get('/moduloPuestos', tags=["ReportsXls"])
 def getPuestos():
     query = """
             select 
@@ -96,8 +96,7 @@ def getPuestos():
             inner join 
             areas a on p.id_area=a.id
             
-            WHERE
-            p.deleted_at IS NULL; 
+            where p.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "puestos" + str(now) + ".xlsx"
@@ -110,91 +109,262 @@ def getPuestos():
     return FileResponse(excel_path)
     
 ## Roles
-@reports.get('/Roles', tags=["ReportsXls"])
+@reports.get('/moduloRoles', tags=["ReportsXls"])
 def getRoles():
     query = """
             select r.id as ID, r.title as Nombre_del_rol
             
             from roles r 
-            WHERE
-            r.deleted_at IS NULL;
+            
+            where r.deleted_at is null;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/Roles.xlsx")
+        resultados, "reportsfile/administracion/empleados/Roles.xlsx")
+
 
 ## Soporte
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+@reports.get('/soporte', tags=["ReportsXls"])
+def getsoporte():
     query = """
-             
+            select 
+            cs.id,
+            cs.rol ,
+            e.name as Nombre,
+            p.puesto, 
+            cs.telefono , 
+            cs."extension" ,
+            cs.tel_celular ,
+            cs.correo 
+
+            from configuracion_soporte cs 
+
+            inner join empleados e on cs.id_elaboro=e.id 
+            inner join puestos p on e.puesto_id =p.id 
+
+            where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
-
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+        resultados, "reportsfile/administracion/empleados/soporte.xlsx")
+    
+## Modulo Empleados
+@reports.get('/moduloEmpleados', tags=["ReportsXls"])
+def getmoduloEmpleados():
     query = """
-             
+            select 
+            e.n_empleado as no_empleado,
+            e.name as Nombre,
+            e.email,
+            e.telefono,
+            a.area as area,
+            p.puesto as puesto,
+            s.name as supervisor,
+            e.antiguedad,
+            e.estatus
+
+            from empleados e
+
+            left join empleados s on e.supervisor_id=s.id
+            inner join areas a on e.area_id=a.id
+            inner join  puestos p on e.puesto_id =p.id
+
+            where e.deleted_at is null and e.estatus='alta'
+
+            order by Nombre asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
+        resultados, "reportsfile/administracion/empleados/moduloEmpleados.xlsx")
 
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
-    query = """
-             
-        """
-    resultados = ejecutar_consulta_sql(cursor, query)
-    exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
 
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+##  Sedes
+@reports.get('/moduloSedes', tags=["ReportsXls"])
+def getmoduloSedes():
     query = """
+            select 
+            s.id,
+            s.sede , 
+            s.direccion ,
+            s.descripcion ,
+            o.empresa 
+
+            from sedes s 
+
+            inner join organizacions o on s.organizacion_id=o.id 
             
+            where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
+        resultados, "reportsfile/administracion/empleados/moduloSedes.xlsx")
 
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+## Niveles Jerarquicos
+@reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
+def getnivelesJerarquicos():
     query = """
-             
+            select pe.nombre as Nivel, descripcion 
+            from perfil_empleados pe  
+
+            where pe.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
+        resultados, "reportsfile/administracion/empleados/nivelesJerarquicos.xlsx")
 
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+## Registro de Áreas
+@reports.get('/registroAreas', tags=["ReportsXls"])
+def getregistroAreas():
     query = """
-            
+            select 
+            a.id as ID,
+            a.area as Nombre_de_área,
+            g.nombre as Grupo,
+            r.area as Reporta_a,
+            a.descripcion as Descripción
+
+            from areas a 
+
+            inner join grupos g on a.id_grupo=g.id
+            left join areas r on a.id_reporta =r.id
+
+            order by a.created_at asc
+
+            where a.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
+        resultados, "reportsfile/administracion/empleados/registroAreas.xlsx")
 
-#############extra
-@reports.get('/puestoAreaDesc', tags=["ReportsXls"])
-def getpuestoAreaDesc():
+## Macroprocesos
+@reports.get('/macroProcesos', tags=["ReportsXls"])
+def getmacroProcesos():
     query = """
-             
+            select 
+            m.codigo as Codigo,
+            m.nombre as Nombre,
+            g.nombre as Grupo ,
+            m.descripcion as Descripcion 
+
+            from macroprocesos m 
+
+            inner join grupos g on m.id_grupo=g.id 
+
+            order by m.created_at asc
+
+            where m.deleted_at is null
+ 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     exportar_a_excel(
-        resultados, "reportsfile/empleados/puestoAreaDesc.xlsx")
+        resultados, "reportsfile/administracion/empleados/macroProcesos.xlsx")
+
+## Procesos
+@reports.get('/moduloProcesos', tags=["ReportsXls"])
+def getmoduloProcesos():
+    query = """
+            select 
+            p.codigo,
+            p.nombre as Nombre_del_proceso, 
+            m.nombre as Macroproceso,
+            p.descripcion as Descripcion
+
+            from procesos p 
+
+            inner join macroprocesos m on p.id_macroproceso=m.id 
+
+            order by p.created_at asc
+
+            where p.deleted_at is null
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    exportar_a_excel(
+        resultados, "reportsfile/administracion/empleados/moduloProcesos.xlsx")
+
+## Modulo Tipo Activos
+@reports.get('/moduloTipoActivos', tags=["ReportsXls"])
+def getmoduloTipoActivos():
+    query = """
+            select 
+            t.id as ID,
+            t.tipo as Categoria
+
+            from tipoactivos t 
+
+            order by t.created_at asc
+
+            where t.deleted_at is null
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    exportar_a_excel(
+        resultados, "reportsfile/administracion/empleados/moduloTipoActivos.xlsx")
 
 
 
+## Modulo Activos
+@reports.get('/moduloActivos', tags=["ReportsXls"])
+def getmoduloActivos():
+    query = """
+            select 
+            t.id as ID,
+            t.tipo as Categoria,
+            sa.subcategoria 
+
+            from tipoactivos t 
+
+            inner join subcategoria_activos sa on t.id =sa.categoria_id  
+
+            order by t.created_at asc 
+
+            where t.deleted_at is null
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    exportar_a_excel(
+        resultados, "reportsfile/administracion/empleados/moduloActivos.xlsx")
+
+## Inventario de Activos
+@reports.get('/inventarioActivos', tags=["ReportsXls"])
+def getinventarioActivos():
+    query = """
+            select 
+            a.id ,
+            a.nombreactivo as Nombre_del_activo,
+            t.tipo as Categoria, 
+            sa.subcategoria,
+            a.descripcion,
+            e.name as Dueno,
+            s.name as Responsable
+
+            from tipoactivos t 
+
+            inner join	subcategoria_activos sa on t.id=sa.categoria_id 
+            inner join activos a on t.id =a.tipoactivo_id 
+            inner join empleados e on a.dueno_id=e.id
+            left join empleados s on e.supervisor_id=s.id 
+
+            where t.deleted_at is null ; 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    exportar_a_excel(
+        resultados, "reportsfile/administracion/empleados/inventarioActivos.xlsx")
+    
+## Glosario
+@reports.get('/glosario', tags=["ReportsXls"])
+def getglosario():
+    query = """
+            select 
+            g.numero as Inciso,
+            concepto, 
+            norma as Modulo,
+            definicion, explicacion 
+
+            from glosarios g 
+
+            where g.deleted_at is null 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    exportar_a_excel(
+        resultados, "reportsfile/administracion/empleados/glosario.xlsx")
 
 
 
