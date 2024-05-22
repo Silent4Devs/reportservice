@@ -313,10 +313,8 @@ def getmoduloProcesos():
             from procesos p 
 
             inner join macroprocesos m on p.id_macroproceso=m.id 
-
-            order by p.created_at asc
-
             where p.deleted_at is null
+            order by p.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "moduloProcesos" + str(now) + ".xlsx"
@@ -337,10 +335,8 @@ def getmoduloTipoActivos():
             t.tipo as Categoria
 
             from tipoactivos t 
-
-            order by t.created_at asc
-
             where t.deleted_at is null
+            order by t.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "moduloTipoActivos" + str(now) + ".xlsx"
@@ -366,10 +362,8 @@ def getmoduloActivos():
             from tipoactivos t 
 
             inner join subcategoria_activos sa on t.id =sa.categoria_id  
-
-            order by t.created_at asc 
-
             where t.deleted_at is null
+            order by t.created_at asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
@@ -442,13 +436,12 @@ def getglosario():
 def getcategoriasCapacitaciones():
     query = """
             select 
-            cc.id as No.,
             cc.nombre 
 
             from 
             categoria_capacitacions cc
 
-            where g.deleted_at is null 
+            where cc.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
