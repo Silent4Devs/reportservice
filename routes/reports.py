@@ -113,6 +113,7 @@ def getPuestos():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
     
+    
 ## Roles
 @reports.get('/moduloRoles', tags=["ReportsXls"])
 def getRoles():
@@ -298,6 +299,7 @@ def getmacroProcesos():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+
 ## Procesos
 @reports.get('/moduloProcesos', tags=["ReportsXls"])
 def getmoduloProcesos():
@@ -317,8 +319,14 @@ def getmoduloProcesos():
             where p.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "moduloProcesos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/moduloProcesos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Modulo Tipo Activos
 @reports.get('/moduloTipoActivos', tags=["ReportsXls"])
@@ -335,8 +343,14 @@ def getmoduloTipoActivos():
             where t.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "moduloTipoActivos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/moduloTipoActivos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 
 
@@ -358,8 +372,14 @@ def getmoduloActivos():
             where t.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/moduloActivos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Inventario de Activos
 @reports.get('/inventarioActivos', tags=["ReportsXls"])
@@ -384,8 +404,14 @@ def getinventarioActivos():
             where t.deleted_at is null ; 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "inventarioActivos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/inventarioActivos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
     
 ## Glosario
 @reports.get('/glosario', tags=["ReportsXls"])
@@ -402,9 +428,39 @@ def getglosario():
             where g.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "glosario" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/glosario.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
+## Categorias capacitaciones ########### Falta revisar 
+@reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
+def getcategoriasCapacitaciones():
+    query = """
+            select 
+            cc.id as No.,
+            cc.nombre 
+
+            from 
+            categoria_capacitacions cc
+
+            where g.deleted_at is null 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+########
 
 
 def ejecutar_consulta_sql(cursor, consulta):
