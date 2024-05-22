@@ -30,9 +30,9 @@ def retrieve_all_item():
     query = """
             select  
             e.name as Nombre, 
-            e.email as Correo_Electonico, 
+            e.email as Email, 
             r.title as Roles,
-            e.name as Empleado_Vinculado,
+            e.name as Vinculado,
             a.area as Area, 
             p.puesto as Puesto
 
@@ -83,14 +83,19 @@ def getempleadosPuestos():
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "empleadosPuestos" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/empleadosPuestos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
     
 ## Puestos
 @reports.get('/moduloPuestos', tags=["ReportsXls"])
 def getPuestos():
     query = """
             select 
-            p.puesto, a.area , a.descripcion 
+            p.puesto as Puesto, a.area as Area , a.descripcion as Descripcion 
 
             from puestos p 
             inner join 
@@ -99,7 +104,7 @@ def getPuestos():
             where p.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "puestos" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "puestos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -112,15 +117,21 @@ def getPuestos():
 @reports.get('/moduloRoles', tags=["ReportsXls"])
 def getRoles():
     query = """
-            select r.id as ID, r.title as Nombre_del_rol
+            select r.id as ID, r.title as Nombre
             
             from roles r 
             
             where r.deleted_at is null;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "roles-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/Roles.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 
 ## Soporte
@@ -145,8 +156,14 @@ def getsoporte():
             where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "soporte-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/soporte.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
     
 ## Modulo Empleados
 @reports.get('/moduloEmpleados', tags=["ReportsXls"])
@@ -174,8 +191,14 @@ def getmoduloEmpleados():
             order by Nombre asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/moduloEmpleados.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 
 ##  Sedes
@@ -196,8 +219,14 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/moduloSedes.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Niveles Jerarquicos
 @reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
@@ -209,8 +238,14 @@ def getnivelesJerarquicos():
             where pe.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/nivelesJerarquicos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Registro de Áreas
 @reports.get('/registroAreas', tags=["ReportsXls"])
@@ -222,42 +257,46 @@ def getregistroAreas():
             g.nombre as Grupo,
             r.area as Reporta_a,
             a.descripcion as Descripción
-
-            from areas a 
-
-            inner join grupos g on a.id_grupo=g.id
-            left join areas r on a.id_reporta =r.id
-
-            order by a.created_at asc
-
-            where a.deleted_at is null
+        from areas a 
+        inner join grupos g on a.id_grupo = g.id
+        left join areas r on a.id_reporta = r.id
+        where a.deleted_at is null
+        order by a.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/registroAreas.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Macroprocesos
 @reports.get('/macroProcesos', tags=["ReportsXls"])
 def getmacroProcesos():
     query = """
-            select 
-            m.codigo as Codigo,
-            m.nombre as Nombre,
-            g.nombre as Grupo ,
-            m.descripcion as Descripcion 
+                select 
+                m.codigo as Codigo,
+                m.nombre as Nombre,
+                g.nombre as Grupo ,
+                m.descripcion as Descripcion 
 
             from macroprocesos m 
-
             inner join grupos g on m.id_grupo=g.id 
-
-            order by m.created_at asc
-
             where m.deleted_at is null
- 
+            order by m.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
     exportar_a_excel(
-        resultados, "reportsfile/administracion/empleados/macroProcesos.xlsx")
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ## Procesos
 @reports.get('/moduloProcesos', tags=["ReportsXls"])
