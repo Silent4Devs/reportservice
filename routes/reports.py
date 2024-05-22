@@ -30,9 +30,9 @@ def retrieve_all_item():
     query = """
             select  
             e.name as Nombre, 
-            e.email as Correo_Electonico, 
+            e.email as Email, 
             r.title as Roles,
-            e.name as Empleado_Vinculado,
+            e.name as Vinculado,
             a.area as Area, 
             p.puesto as Puesto
 
@@ -89,13 +89,13 @@ def getempleadosPuestos():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
-     
+    
 ## Puestos
 @reports.get('/moduloPuestos', tags=["ReportsXls"])
 def getPuestos():
     query = """
             select 
-            p.puesto, a.area , a.descripcion 
+            p.puesto as Puesto, a.area as Area , a.descripcion as Descripcion 
 
             from puestos p 
             inner join 
@@ -104,7 +104,7 @@ def getPuestos():
             where p.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "moduloPuestos" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "puestos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -118,14 +118,14 @@ def getPuestos():
 @reports.get('/moduloRoles', tags=["ReportsXls"])
 def getRoles():
     query = """
-            select r.id as ID, r.title as Nombre_del_rol
+            select r.id as ID, r.title as Nombre
             
             from roles r 
             
             where r.deleted_at is null;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "moduloRoles" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "roles-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -157,7 +157,7 @@ def getsoporte():
             where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "soporte" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "soporte-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -165,7 +165,7 @@ def getsoporte():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
-      
+    
 ## Modulo Empleados
 @reports.get('/moduloEmpleados', tags=["ReportsXls"])
 def getmoduloEmpleados():
@@ -192,7 +192,7 @@ def getmoduloEmpleados():
             order by Nombre asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "moduloEmpleados" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -220,7 +220,7 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "moduloSedes" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -239,7 +239,7 @@ def getnivelesJerarquicos():
             where pe.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "nivelesJerarquicos" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -258,18 +258,14 @@ def getregistroAreas():
             g.nombre as Grupo,
             r.area as Reporta_a,
             a.descripcion as Descripción
-
-            from areas a 
-
-            inner join grupos g on a.id_grupo=g.id
-            left join areas r on a.id_reporta =r.id
-
-            order by a.created_at asc
-
-            where a.deleted_at is null
+        from areas a 
+        inner join grupos g on a.id_grupo = g.id
+        left join areas r on a.id_reporta = r.id
+        where a.deleted_at is null
+        order by a.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "registroAreas" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -282,23 +278,19 @@ def getregistroAreas():
 @reports.get('/macroProcesos', tags=["ReportsXls"])
 def getmacroProcesos():
     query = """
-            select 
-            m.codigo as Codigo,
-            m.nombre as Nombre,
-            g.nombre as Grupo ,
-            m.descripcion as Descripcion 
+                select 
+                m.codigo as Codigo,
+                m.nombre as Nombre,
+                g.nombre as Grupo ,
+                m.descripcion as Descripcion 
 
             from macroprocesos m 
-
             inner join grupos g on m.id_grupo=g.id 
-
-            order by m.created_at asc
-
             where m.deleted_at is null
- 
+            order by m.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "macroProcesos" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
