@@ -406,14 +406,13 @@ def getglosario():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Categorias capacitaciones ########### Falta revisar 
+## Categorias capacitaciones 
 @reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
 def getcategoriasCapacitaciones():
     query = """
             select distinct cc.nombre as "Nombre"
             from recursos r 
-            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id  
-            where r.deleted_at is null;
+            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id  ;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
@@ -496,6 +495,184 @@ def getregistroTimesheet():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+## Timesheet Áreas
+@reports.get('/timesheetAreas', tags=["ReportsXls"])
+def gettimesheetAreas():
+    query = """
+            select 
+            e.name as "Nombre",
+            p.puesto as "Puesto",
+            a.area as "Área",
+            e.estatus as "Estatus",
+            e.antiguedad as "Fecha"
+            from empleados e 
+            inner join puestos p on e.puesto_id =p.id 
+            inner join areas a on e.area_id=a.id
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetAreas" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+## Timesheet proyectos
+@reports.get('/timesheetProyectos', tags=["ReportsXls"])
+def gettimesheetProyectos():
+    query = """
+            select 
+            tp.proyecto as "ID-Proyecto",
+            string_agg(distinct a.area, ', ') as "Áreas participantes",
+            string_agg(distinct e.name, ', ') as "Empleados participantes",
+            tc.nombre as "Cliente"
+            from timesheet_proyectos tp 
+            left join timesheet_proyectos_empleados tpe on tp.id=tpe.proyecto_id 
+            left join timesheet_proyectos_areas tpa on tp.id =tpe.proyecto_id 
+            left join areas a on tpe.area_id =a.id  
+            left join empleados e on tpe.empleado_id =e.id 
+            right  join timesheet_clientes tc on tp.cliente_id =tc.id 
+            group by tp.proyecto , tc.nombre;            
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetProyectos" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+## Registros Colaboradores Tareas ######################
+@reports.get('/colaboradoresTareas', tags=["ReportsXls"])
+def getcolaboradoresTareas():
+    query = """
+            select 
+            tp.fecha_inicio as "Fecha inicio", 
+            tp.fecha_fin as "Fecha fin",
+            string_agg(distinct e.name, ', ') as  "Empleado",
+            string_agg(distinct s.name, ', ') as "Supervisor",
+            string_agg(distinct tp.proyecto, ', ') as "Proyecto",
+            string_agg(distinct tt.tarea, ', ') as "Tarea",
+            th.descripcion as "Descripción",
+            sum(
+                coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+            ) as "Horas de la semana"
+            from timesheet_proyectos tp 
+            left join timesheet_proyectos_empleados tpe on tp.id =tpe.proyecto_id 
+            left join empleados e on tpe.empleado_id =e.id 
+            left join empleados s on e.supervisor_id=s.id
+            left join timesheet_tareas tt on tp.id =tt.proyecto_id
+            right join timesheet_horas th on e.id=th.empleado_id 
+            where tp.fecha_inicio > '2022-01-01'
+            group by tp.fecha_inicio , tp.fecha_fin,th.descripcion ;
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+## Timesheet Financiero
+@reports.get('/timesheetFinanciero', tags=["ReportsXls"])
+def gettimesheetFinanciero():
+    query = """
+            tc.nombre as "Cliente",
+            a.area as "Área(s)",
+            e.name as "Empleados participantes",
+            tpe.horas_asignadas as "Horas del empleado",
+            tpe.horas_asignadas * tpe.costo_hora as "Costo total del empleado",
+            tp.estatus as "Estatus",
+            sum(tpe.horas_asignadas)over(partition by tpe.proyecto_id) as "Horas totales del proyecto",
+            sum(tpe.horas_asignadas * tpe.costo_hora) over(partition by tpe.proyecto_id) as "Costo total del Proyecto"
+            from timesheet_proyectos tp 
+            left join timesheet_clientes tc on tp.cliente_id =tc.id
+            left join timesheet_proyectos_empleados tpe on tp.id =tpe.proyecto_id 
+            left join areas a on tpe.area_id =a.id 
+            left join empleados e on tpe.empleado_id =e.id 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+## Vista global de Solicitudes de Day Off  ####### Integrar IF para 
+@reports.get('/solicitudesDayOff', tags=["ReportsXls"])
+def getsolicitudesDayOff():
+    query = """
+            select e.name as "Solicitante",
+            sd.descripcion as "Descripcion",
+            to_char(sd.año, 'FM9999') as "Año",
+            sd.dias_solicitados as "Días solicitados",
+            sd.fecha_inicio as "Inicio",
+            sd.fecha_fin as "Fin",
+            case  
+                when sd.aprobacion = 3 then 'Aprovado'
+                when sd.aprobacion = 2 then 'Rechazado'
+                when sd.aprobacion = 1 then 'Pendiente'
+                else 'desconocido'
+            end as "Aprobacion" 
+            from solicitud_dayoff sd 
+            inner join empleados e on sd.empleado_id =e.id
+            order by sd.año desc 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "solicitudesDayOff" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+## Vista GLobal Solicitudes de Vacaciones
+@reports.get('/solicitudesVacaciones', tags=["ReportsXls"])
+def getsolicitudesVacaciones():
+    query = """
+            select e.name as "Solicitante",
+            sv.descripcion as "Descripción",
+            sv.año as "Periodo",
+            sv.dias_solicitados  as "Días solicitados",
+            sv.fecha_inicio as "Inicio",
+            sv.fecha_fin as "Fin",
+            case  
+                when sv.aprobacion = 3 then 'Aprovado'
+                when sv.aprobacion = 2 then 'Rechazado'
+                when sv.aprobacion = 1 then 'Pendiente'
+                else 'desconocido'
+            end as "Aprobacion"
+            from solicitud_vacaciones sv 
+            inner join empleados e on sv.empleado_id =e.id 
+            order by sv.fecha_inicio desc 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
 ########
 
