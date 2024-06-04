@@ -674,6 +674,44 @@ def getsolicitudesVacaciones():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+## Evaluaciones 360
+@reports.get('/evaluaciones360', tags=["ReportsXls"])
+def getevaluaciones360():
+    query = """
+            select id as "ID",
+            nombre as "Nombre",
+            case  
+                when estatus:: integer = 3 then 'Cerrado'
+                when estatus:: integer = 2 then 'Abierto'
+                when estatus:: integer = 1 then 'Pendiente'
+                else 'desconocido'
+            end as "Estatus",
+            fecha_inicio as "Fecha inicio",
+            fecha_fin as "fecha fin",
+            case 
+                when include_competencias then 'si'
+                else 'no'
+            end  as "¿Incluye competencias",
+            case 
+                when include_objetivos then 'si'
+                else 'no'
+            end  as "¿Incluye objetivos?"
+            from ev360_evaluaciones ee 
+            where estatus ::integer = 3
+                and include_competencias = true 
+                and include_objetivos = true 
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "evaluaciones360" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+
 ########
 
 
