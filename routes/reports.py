@@ -29,7 +29,7 @@ def getEmpleados():
 
 # Users #############
 @reports.get('/Users', tags=["ReportsXls"])
-def retrieve_all_item():
+def getusers():
     query = """
             select  
             e.name as "Nombre", 
@@ -87,7 +87,7 @@ def getempleadosPuestos():
     
 ## Puestos
 @reports.get('/moduloPuestos', tags=["ReportsXls"])
-def getPuestos():
+def getmoduloPuestos():
     query = """
             select 
             p.puesto as "Puesto", 
@@ -99,7 +99,7 @@ def getPuestos():
             where p.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "puestos-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "moduloPuestos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -118,7 +118,7 @@ def getRoles():
             where r.deleted_at is null;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "roles-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "moduloRoles" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -147,7 +147,7 @@ def getsoporte():
             where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "soporte-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "soporte" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -178,7 +178,7 @@ def getmoduloEmpleados():
             order by Nombre asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "moduloEmpleados-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -203,7 +203,7 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "moduloSedes" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -216,12 +216,13 @@ def getmoduloSedes():
 @reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
 def getnivelesJerarquicos():
     query = """
-            select pe.nombre as "Nivel", descripcion as "Descripción" 
+            select pe.nombre as "Nivel", 
+            descripcion as "Descripción" 
             from perfil_empleados pe  
             where pe.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "nivelesJerarquicos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -247,7 +248,7 @@ def getregistroAreas():
             where a.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "registroAreas" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -272,7 +273,7 @@ def getmacroProcesos():
             order by m.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "macroProcesos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     excel_path = Path(fileRoute)
@@ -317,7 +318,6 @@ def getmoduloTipoActivos():
             from tipoactivos t 
             order by t.created_at asc
             where t.deleted_at is null
-            order by t.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "moduloTipoActivos" + str(now) + ".xlsx"
