@@ -5,13 +5,17 @@ from config.database import cursor
 import pandas as pd
 import psycopg2
 from pathlib import Path
-from fastapi import HTTPException
-from datetime import date
-from datetime import datetime
+from fastapi import FastAPI, Query, HTTPException
+from typing import Optional
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 import os
 
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Query, HTTPException
+from datetime import date, datetime
+
+app = FastAPI()
 reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
@@ -244,7 +248,6 @@ def getregistroAreas():
             inner join grupos g on a.id_grupo=g.id
             left join areas r on a.id_reporta =r.id
             order by a.created_at asc
-            where a.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
@@ -625,7 +628,7 @@ def getsolicitudesDayOff():
             sd.fecha_inicio as "Inicio",
             sd.fecha_fin as "Fin",
             case  
-                when sd.aprobacion = 3 then 'Aprovado'
+                when sd.aprobacion = 3 then 'Aprobado'
                 when sd.aprobacion = 2 then 'Rechazado'
                 when sd.aprobacion = 1 then 'Pendiente'
                 else 'desconocido'
@@ -655,7 +658,7 @@ def getsolicitudesVacaciones():
             sv.fecha_inicio as "Inicio",
             sv.fecha_fin as "Fin",
             case  
-                when sv.aprobacion = 3 then 'Aprovado'
+                when sv.aprobacion = 3 then 'Aprobado'
                 when sv.aprobacion = 2 then 'Rechazado'
                 when sv.aprobacion = 1 then 'Pendiente'
                 else 'desconocido'
@@ -687,11 +690,11 @@ def getevaluaciones360():
                 else 'desconocido'
             end as "Estatus",
             fecha_inicio as "Fecha inicio",
-            fecha_fin as "fecha fin",
+            fecha_fin as "Fecha fin",
             case 
                 when include_competencias then 'si'
                 else 'no'
-            end  as "¿Incluye competencias",
+            end  as "¿Incluye competencias?",
             case 
                 when include_objetivos then 'si'
                 else 'no'
@@ -756,3 +759,9 @@ def exportar_a_excel(resultados, nombre_archivo):
     #     hoja.column_dimensions[column].width = adjusted_width
    
     # libro.save(nombre_archivo)
+
+
+
+
+
+
