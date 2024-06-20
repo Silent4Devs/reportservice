@@ -56,6 +56,7 @@ def retrieve_all_item():
     fileRoute = DirectoryEmpleados + "users" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -83,6 +84,7 @@ def getempleadosPuestos():
     fileRoute = DirectoryEmpleados + "empleadosPuestos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -106,6 +108,7 @@ def getPuestos():
     fileRoute = DirectoryEmpleados + "puestos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -125,6 +128,7 @@ def getRoles():
     fileRoute = DirectoryEmpleados + "roles-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -154,6 +158,7 @@ def getsoporte():
     fileRoute = DirectoryEmpleados + "soporte-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -185,6 +190,7 @@ def getmoduloEmpleados():
     fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -210,6 +216,7 @@ def getmoduloSedes():
     fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -228,6 +235,7 @@ def getnivelesJerarquicos():
     fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -253,6 +261,7 @@ def getregistroAreas():
     fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -278,6 +287,7 @@ def getmacroProcesos():
     fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -304,6 +314,7 @@ def getmoduloProcesos():
     fileRoute = DirectoryEmpleados + "moduloProcesos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -326,6 +337,7 @@ def getmoduloTipoActivos():
     fileRoute = DirectoryEmpleados + "moduloTipoActivos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -351,6 +363,7 @@ def getmoduloActivos():
     fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -380,6 +393,7 @@ def getinventarioActivos():
     fileRoute = DirectoryEmpleados + "inventarioActivos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -403,6 +417,7 @@ def getglosario():
     fileRoute = DirectoryEmpleados + "glosario" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -421,6 +436,7 @@ def getcategoriasCapacitaciones():
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -447,6 +463,7 @@ def getvisualizarLogs():
     fileRoute = DirectoryEmpleados + "visualizarLogs" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -462,7 +479,7 @@ def getregistroTimesheet():
             th.created_at as "Fecha inicio",
             th.updated_at as "Fecha fin",
             e.name as "Empleado",
-            p.name as "Aprovador",
+            p.name as "Aprobador",
             a.area as "Área",
             t.estatus as "Estatus",
             sum(
@@ -492,6 +509,7 @@ def getregistroTimesheet():
     fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -516,6 +534,7 @@ def gettimesheetAreas():
     fileRoute = DirectoryEmpleados + "timesheetAreas" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -543,6 +562,7 @@ def gettimesheetProyectos():
     fileRoute = DirectoryEmpleados + "timesheetProyectos" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -583,6 +603,7 @@ def getcolaboradoresTareas():
     fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -611,6 +632,7 @@ def gettimesheetFinanciero():
     fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -641,6 +663,7 @@ def getsolicitudesDayOff():
     fileRoute = DirectoryEmpleados + "solicitudesDayOff" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -671,6 +694,7 @@ def getsolicitudesVacaciones():
     fileRoute = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -708,6 +732,7 @@ def getevaluaciones360():
     fileRoute = DirectoryEmpleados + "evaluaciones360" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
+    ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -742,26 +767,26 @@ def exportar_a_excel(resultados, nombre_archivo):
         raise HTTPException(
             status_code=500, detail="Report error: " + str(e))
 
-#def ajustar_tamano_columnas(nombre_archivo):
-    # libro = load_workbook(nombre_archivo)
-    # hoja = libro.active
-    
-    # for col in hoja.columns:
-    #     max_length = 0
-    #     column = col[0].column_letter 
-    #     for cell in col:
-    #         try:
-    #             if cell.value and len(str(cell.value)) > max_length:
-    #                 max_length = len(str(cell.value))
-    #         except:
-    #             pass
-    #     adjusted_width = max_length + 2
-    #     hoja.column_dimensions[column].width = adjusted_width
-   
-    # libro.save(nombre_archivo)
+def ajustar_columnas(nombre_archivo):
+    try:
+        workbook = load_workbook(nombre_archivo)
+        worksheet = workbook.active
 
+        for col in worksheet.columns:
+            max_length = 0
+            column = col[0].column_letter  # Get the column name
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            worksheet.column_dimensions[column].width = adjusted_width
 
-
-
-
-
+        workbook.save(nombre_archivo)
+        print("Columnas ajustadas en", nombre_archivo)
+    except Exception as e:
+        print("No se pudieron ajustar las columnas debido a un error." + str(e))
+        raise HTTPException(
+            status_code=500, detail="Column adjust error: " + str(e))
