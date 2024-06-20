@@ -141,11 +141,6 @@ def registros_timesheet_status_dona():
         FROM timesheet t;
     """
     df = pd.read_sql(query, conexion)
-    # Cerrar cursor y conexión
-    # cursor.close()
-    # conexion.close()
-   
-    
     
     labels = df.columns.tolist()  #Estatus
     values = df.iloc[0].tolist()  # Valores correspondientes a cada estatus
@@ -247,8 +242,8 @@ def registros_timesheetArea_dona():
 
     df = pd.read_sql(query, conexion)
     
-    labels = df['Área'].tolist()  #Áreas
-    values = df['Horas del área'].tolist()  # Valores correspondientes a cada estatus
+    labels = df['Área'].tolist()  
+    values = df['Horas del área'].tolist()  
 
     # Crear la gráfica de dona
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
@@ -273,20 +268,23 @@ if cursor is None:
 def registros_timesheetMes_dona():
     query = """
         select
-            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as "Aprobado",
-            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as "Rechazado",
+            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as "Registros Aprobados",
+            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as "Registros Rechazados",
             sum(case when t.estatus = 'pendiente' then 1 else 0 end) as "Pendiente",
             sum(case when t.estatus = 'borrador' then 1 else 0 end) as "Borrador",
             count(*) as "Registros Totales"
+        from (
+        select *
         from timesheet t
-        where t.estatus IN ('aprobado', 'rechazado')
-            and t.fecha_dia BETWEEN CURRENT_DATE - INTERVAL '1 MONTH' AND CURRENT_DATE;
+        where t.fecha_dia BETWEEN CURRENT_DATE - INTERVAL '1 MONTH' AND CURRENT_DATE
+        )t
+        where t.estatus IN ('aprobado', 'rechazado')        
     """
 
     df = pd.read_sql(query, conexion)
     
-    labels = df['t.estatus'].tolist()  #Áreas
-    values = df['Registros Totales'].tolist()  # Valores correspondientes a cada estatus
+    labels = df.columns.tolist()
+    values = df.iloc[0].tolist()  
 
     # Crear la gráfica de dona
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])

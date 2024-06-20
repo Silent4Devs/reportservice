@@ -5,6 +5,7 @@ import pandas as pd
 from fastapi.responses import JSONResponse, FileResponse
 from config.database import cursor
 import psycopg2
+from fastapi import APIRouter
 from pathlib import Path
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import FileResponse
@@ -12,76 +13,40 @@ from typing import Optional
 from datetime import date, datetime
 from openpyxl import load_workbook
 import os
+import pprint
+import sys
 
 app = FastAPI()
-
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
 
-## Timesheet proyectos
-@app.get('/timesheetProyectosF', tags=["ReportsXls"])
-def get_timesheet_proyectosF(
-    id: Optional[str] = Query(None, description="Área de los proyectos"),     
-    proyecto: Optional[int] = Query(None, description="ID del proyecto"),     
-    fechainicio: Optional[datetime] = Query(None, description="Fecha de inicio en formato YYYY-MM-DD"), 
-    fechafin: Optional[datetime] = Query(None, description="Fecha de fin en formato YYYY-MM-DD")
-    ):    
-      
-    query = """         
-        SELECT         
-            tp.proyecto AS "ID-Proyecto",         
-            STRING_AGG(DISTINCT a.area, ', ') AS "Áreas participantes",         
-            STRING_AGG(DISTINCT e.name, ', ') AS "Empleados participantes",        
-            tc.nombre AS "Cliente" 
-        FROM timesheet_proyectos tp         
-        LEFT JOIN timesheet_proyectos_empleados tpe ON tp.id = tpe.proyecto_id         
-        LEFT JOIN timesheet_proyectos_areas tpa ON tp.id = tpe.proyecto_id         
-        LEFT JOIN areas a ON tpe.area_id = a.id           
-        LEFT JOIN empleados e ON tpe.empleado_id = e.id         
-        RIGHT JOIN timesheet_clientes tc ON tp.cliente_id = tc.id
-    """        
-    
-    conditions = []        
-    if id:         
-        conditions.append(f"a.id = '{id}'")     
-        if proyecto:         
-            conditions.append(f"tp.proyecto = {proyecto}")     
-            if fechainicio:         
-                conditions.append(f"tp.fecha_inicio >= '{fechainicio}'")     
-                if fechafin:         
-                    conditions.append(f"tp.fecha_fin <= '{fechafin}'")         
-                    if conditions:         
-                        query += " WHERE " + " AND ".join(conditions)         
-    query += " GROUP BY tp.proyecto, tc.nombre;"
-    
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    fileRoute = DirectoryEmpleados + "timesheetProyectosF" + str(now) + ".xlsx" 
-    
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    
-    exportar_a_excel(resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+# Validar si la carpeta ya existe
+if not os.path.exists(DirectoryEmpleados):
+    # Si no existe, crear la carpeta
+    os.makedirs(DirectoryEmpleados)
 
-    excel_path = Path(fileRoute) 
-    if not excel_path.is_file(): 
-        raise HTTPException(status_code=404, detail="File not found on the server") 
+now = date.today()
 
-    return FileResponse(excel_path)
-get_timesheet_proyectosF()
+
+@app.get("/")
+def read_root():
+    return{"message":"hola"}
     
-## Registro Timesheet Areas
-@app.get('/registroTimesheet', tags=["ReportsXls"])
-def get_registroTimesheet(
-    empleado: Optional[str] = Query(None, description="Nombre del Empleado"),     
-    fechainicio: Optional[datetime] = Query(None, description="Fecha de inicio en formato YYYY-MM-DD"), 
-    fechafin: Optional[datetime] = Query(None, description="Fecha de fin en formato YYYY-MM-DD"),
-    horas_semana: Optional[float] = Query(None, description="Horas registradas en la semana")
-    ):    
-      
-    query = """         
-        select 
-            th.created_at as "Fecha inicio",
-            th.updated_at as "Fecha fin",
+
+## Registro Timesheet *
+@app.get('/registrosTimesheet/{area}/{empleado}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
+
+def getregistroTimesheet(area: str, empleado: str, fecha_inicio: str, fecha_fin: str):
+    #pprint.pprint(f"Area: {area}, Empleado: {empleado}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    try:
+        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
+    
+    query = """
+            select 
+            to_char(date_trunc('week', t.fecha_dia), 'DD/MM/YYYY') as "Fecha inicio",
+            to_char(t.fecha_dia, 'DD/MM/YYYY') as "Fecha fin",
             e.name as "Empleado",
             p.name as "Aprovador",
             a.area as "Área",
@@ -101,229 +66,212 @@ def get_registroTimesheet(
             inner join areas a on e.id =a.empleados_id 
             inner join timesheet_horas th on t.id=th.timesheet_id  
             where e.deleted_at is null
-            GROUP BY 
-                th.created_at, 
-                th.updated_at, 
+            and a.area = '{area}' 
+            and e.name = '{empleado}' 
+            and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'
+            group by 
+                t.fecha_dia, 
                 e.name, 
                 p.name, 
                 a.area, 
-                t.estatus;
-        """        
+                t.estatus
+            order by t.fecha_dia desc;
+        """
     
+    print(query)
 
-    conditions = []        
-    if empleado:         
-        conditions.append(f"e.name = '{empleado}'")     
-    if fechainicio:         
-        conditions.append(f"th.created_at >= '{fechainicio}'")     
-    if fechafin:         
-        conditions.append(f"th.updated_at <= '{fechafin}'")  
-    if horas_semana is not None:
-        conditions.append(f"""
-            SUM(
-                COALESCE(CAST(NULLIF(th.horas_lunes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_martes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_miercoles, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_jueves, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_viernes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_sabado, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_domingo, '') AS numeric), 0)
-            ) = {horas_semana}
-        """)       
+    #Imprimir query en txt
+    file_path = "query.txt"
+    with open(file_path, "w") as file:
+        file.write(query)
 
-    if conditions:         
-        query += " AND " + " AND ".join(conditions)         
 
-    query += """
-        GROUP BY 
-            th.created_at, 
-            th.updated_at, 
-            e.name, 
-            p.name, 
-            a.area, 
-            t.estatus;
-    """
-    
 
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx" 
-    
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    
-    exportar_a_excel(resultados, fileRoute)
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
     ajustar_columnas(fileRoute)
-
-    excel_path = Path(fileRoute) 
-    if not excel_path.is_file(): 
-        raise HTTPException(status_code=404, detail="File not found on the server") 
-
+    excel_path = Path(fileRoute)
+    
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
 
-##Registro Timesheet Áreas
-@app.get('/timesheetAreas', tags=["ReportsXls"])
-def gettimesheetAreas(
-    area: Optional[str] = Query(None, description="Área de los empleados"),
-    ############Ajustar
-    fecha_ultima_semana: Optional[datetime] = Query(None, description="Fecha de última semana en formato YYYY-MM-DD"), 
-    fecha_penultima_semana: Optional[datetime] = Query(None, description="Fecha de penúltima semana en formato YYYY-MM-DD")
-):    
-    query = """         
-        SELECT
-            e.name AS "Nombre",
-            p.puesto AS "Puesto",
-            a.area AS "Área",
-            e.estatus AS "Estatus",
-            e.antiguedad AS "Fecha"
-        FROM empleados e
-        INNER JOIN puestos p ON e.puesto_id = p.id 
-        INNER JOIN areas a ON e.area_id = a.id
-        WHERE 1=1
-    """        
 
-    conditions = []        
-    if area:         
-        conditions.append(f"a.area = '{area}'")     
-    if fecha_ultima_semana:  #######ajustar       
-        conditions.append(f"e.antiguedad <= '{fecha_ultima_semana}'")     
-    if fecha_penultima_semana:         
-        conditions.append(f"e.antiguedad >= '{fecha_penultima_semana}'")       
-
-    if conditions:         
-        query += " AND " + " AND ".join(conditions)         
-
-    query += ";"
+## Timesheet Áreas *
+@app.post("/registrosTimesheet/{area}/{fecha_inicio}/{fecha_fin}")
+# @reports.get('/timesheetAreas', tags=["ReportsXls"])
+def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):
+    pprint.pprint(f"Area: {area}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    try:
+        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
     
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    fileRoute = DirectoryEmpleados +"timesheetAreas" + str(now) + ".xlsx" 
-    
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    
-    exportar_a_excel(resultados, fileRoute)
+    query = """
+            select 
+            e.name as "Nombre",
+            p.puesto as "Puesto",
+            a.area as "Área",
+            e.estatus as "Estatus",
+            e.antiguedad as "Fecha"
+            from empleados e 
+            inner join puestos p on e.puesto_id =p.id 
+            inner join areas a on e.area_id=a.id
+            where a.area = '{area}'
+                and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetAreas" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
     ajustar_columnas(fileRoute)
-
-    excel_path = Path(fileRoute) 
-    if not excel_path.is_file(): 
-        raise HTTPException(status_code=404, detail="File not found on the server") 
-
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Registros Colaboradores Tareas
-@app.get('/colaboradoresTareas', tags=["ReportsXls"])
-def get_timesheet_proyectos(
-    empleado: Optional[str] = Query(None, description="Nombre del empleado"),
-    proyecto: Optional[int] = Query(None, description="ID del proyecto"),
-    fechainicio: Optional[datetime] = Query(None, description="Fecha de inicio en formato YYYY-MM-DD"), 
-    fechafin: Optional[datetime] = Query(None, description="Fecha de fin en formato YYYY-MM-DD")
-):    
-    query = """         
-        SELECT
-            tp.fecha_inicio AS "Fecha inicio", 
-            tp.fecha_fin AS "Fecha fin",
-            STRING_AGG(DISTINCT e.name, ', ') AS "Empleado",
-            STRING_AGG(DISTINCT s.name, ', ') AS "Supervisor",
-            STRING_AGG(DISTINCT tp.proyecto::text, ', ') AS "Proyecto",
-            STRING_AGG(DISTINCT tt.tarea, ', ') AS "Tarea",
-            th.descripcion AS "Descripción",
-            SUM(
-                COALESCE(CAST(NULLIF(th.horas_lunes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_martes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_miercoles, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_jueves, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_viernes, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_sabado, '') AS numeric), 0) +
-                COALESCE(CAST(NULLIF(th.horas_domingo, '') AS numeric), 0)
-            ) AS "Horas de la semana"
-        FROM timesheet_proyectos tp 
-        LEFT JOIN timesheet_proyectos_empleados tpe ON tp.id = tpe.proyecto_id 
-        LEFT JOIN empleados e ON tpe.empleado_id = e.id 
-        LEFT JOIN empleados s ON e.supervisor_id = s.id
-        LEFT JOIN timesheet_tareas tt ON tp.id = tt.proyecto_id
-        RIGHT JOIN timesheet_horas th ON e.id = th.empleado_id 
-        WHERE tp.fecha_inicio > '2022-01-01'
-    """        
-
-    conditions = []        
-    if empleado:         
-        conditions.append(f"e.name = '{empleado}'")     
-    if proyecto:         
-        conditions.append(f"tp.proyecto = {proyecto}")     
-    if fechainicio:         
-        conditions.append(f"tp.fecha_inicio >= '{fechainicio}'")     
-    if fechafin:         
-        conditions.append(f"tp.fecha_fin <= '{fechafin}'")       
-
-    if conditions:         
-        query += " AND " + " AND ".join(conditions)         
-
-    query += """
-        GROUP BY 
-            tp.fecha_inicio, 
-            tp.fecha_fin, 
-            th.descripcion;
-    """
+## Timesheet proyectos *
+@app.get('/timesheetProyectos/{area}/{proyecto}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
+def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin: str):
+    pprint.pprint(f"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    try:
+        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
     
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx" 
-    
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    
-    exportar_a_excel(resultados, fileRoute)
+    query = """
+            select 
+            tp.proyecto as "ID-Proyecto",
+            string_agg(distinct a.area, ', ') as "Áreas participantes",
+            string_agg(distinct e.name, ', ') as "Empleados participantes",
+            tc.nombre as "Cliente"
+            from timesheet_proyectos tp 
+            left join timesheet_proyectos_empleados tpe on tp.id=tpe.proyecto_id 
+            left join timesheet_proyectos_areas tpa on tp.id =tpe.proyecto_id 
+            left join areas a on tpe.area_id =a.id  
+            left join empleados e on tpe.empleado_id =e.id 
+            right  join timesheet_clientes tc on tp.cliente_id =tc.id 
+            where a.area = '{area}' 
+            and tp.proyecto = '{proyecto}' 
+            and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'
+            group by tp.proyecto , tc.nombre;            
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetProyectos" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
     ajustar_columnas(fileRoute)
-
-    excel_path = Path(fileRoute) 
-    if not excel_path.is_file(): 
-        raise HTTPException(status_code=404, detail="File not found on the server") 
-
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-##Timesheet Financiero 
-@app.get('/timesheetFinanciero', tags=["ReportsXls"])
-def get_timesheet_proyectos(
-    proyecto: Optional[int] = Query(None, description="ID del proyecto")
-):    
-    query = """         
-        SELECT
-            tc.nombre AS "Cliente",
-            a.area AS "Área(s)",
-            e.name AS "Empleados participantes",
-            tpe.horas_asignadas AS "Horas del empleado",
-            tpe.horas_asignadas * tpe.costo_hora AS "Costo total del empleado",
-            tp.estatus AS "Estatus",
-            SUM(tpe.horas_asignadas) OVER(PARTITION BY tpe.proyecto_id) AS "Horas totales del proyecto",
-            SUM(tpe.horas_asignadas * tpe.costo_hora) OVER(PARTITION BY tpe.proyecto_id) AS "Costo total del Proyecto"
-        FROM timesheet_proyectos tp 
-        LEFT JOIN timesheet_clientes tc ON tp.cliente_id = tc.id
-        LEFT JOIN timesheet_proyectos_empleados tpe ON tp.id = tpe.proyecto_id 
-        LEFT JOIN areas a ON tpe.area_id = a.id 
-        LEFT JOIN empleados e ON tpe.empleado_id = e.id
-        WHERE 1=1
-    """        
-
-    if proyecto:         
-        query += f" AND tp.id = {proyecto}"         
-
-    query += ";"
+## Registros Colaboradores Tareas 
+@app.get('/colaboradoresTareas/{empleado}/{area}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
+def getcolaboradoresTareas(empleado: str,area: str,  fecha_inicio: str, fecha_fin: str):
+    pprint.pprint(f"Empleado: {empleado},Area: {area},  Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    try:
+        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
     
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx" 
-    
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    
-    exportar_a_excel(resultados, fileRoute)
+    query = """
+            select 
+            tp.fecha_inicio as "Fecha inicio", 
+            tp.fecha_fin as "Fecha fin",
+            string_agg(distinct e.name, ', ') as  "Empleado",
+            string_agg(distinct s.name, ', ') as "Supervisor",
+            string_agg(distinct tp.proyecto, ', ') as "Proyecto",
+            string_agg(distinct tt.tarea, ', ') as "Tarea",
+            th.descripcion as "Descripción",
+            sum(
+                coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+                coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+            ) as "Horas de la semana"
+            from timesheet_proyectos tp 
+            left join timesheet_proyectos_empleados tpe on tp.id =tpe.proyecto_id 
+            left join empleados e on tpe.empleado_id =e.id 
+            left join empleados s on e.supervisor_id=s.id
+            left join timesheet_tareas tt on tp.id =tt.proyecto_id
+            right join timesheet_horas th on e.id=th.empleado_id 
+            where tp.fecha_inicio > '2022-01-01'
+            and e.name = '{empleado}'
+            and a.area = '{area}' 
+            and t.fecha_inico between '{fecha_inicio}' and '{fecha_fin}'
+            group by tp.fecha_inicio , tp.fecha_fin,th.descripcion ;
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
     ajustar_columnas(fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
-    excel_path = Path(fileRoute) 
-    if not excel_path.is_file(): 
-        raise HTTPException(status_code=404, detail="File not found on the server") 
+## Timesheet Financiero *
+@app.get('/timesheetFinanciero/{proyecto}', tags=["ReportsXls"])
+def gettimesheetFinanciero(proyecto: str):
+    pprint.pprint(f"Proyecto: {proyecto}")   
+    
+    query = """
+            tp.identificador as "ID",
+            tp.proyecto as "Proyecto",
+            tc.nombre as "Cliente",
+            a.area as "Área(s)",
+            e.name as "Empleados participantes",
+            tpe.horas_asignadas as "Horas del empleado",
+            tpe.horas_asignadas * tpe.costo_hora as "Costo total del empleado",
+            tp.estatus as "Estatus",
+            sum(tpe.horas_asignadas)over(partition by tpe.proyecto_id) as "Horas totales del proyecto",
+            sum(tpe.horas_asignadas * tpe.costo_hora) over(partition by tpe.proyecto_id) as "Costo total del Proyecto"
+            from timesheet_proyectos tp 
+            left join timesheet_clientes tc on tp.cliente_id =tc.id
+            left join timesheet_proyectos_empleados tpe on tp.id =tpe.proyecto_id 
+            left join areas a on tpe.area_id =a.id 
+            left join empleados e on tpe.empleado_id =e.id 
+            where tp.proyecto={proyecto}
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    ajustar_columnas(fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
 
-    return FileResponse(excel_path) 
 
-#########################
+def ejecutar_consulta_sql(cursor, consulta):
+    try:
+        cursor.execute(consulta)
+        resultados = cursor.fetchall()
+        return resultados
+    except psycopg2.Error as e:
+        print("Error al ejecutar la consulta SQL:" + str(e))
+        # return JSONResponse(content={"message": "Error al ejecutar la consulta SQL."})
+        raise HTTPException(
+            status_code=500, detail="Error executing SQL query: " + str(e))
+
+
 def exportar_a_excel(resultados, nombre_archivo):
     try:
         if resultados is not None:
@@ -359,4 +307,4 @@ def ajustar_columnas(nombre_archivo):
         print("No se pudieron ajustar las columnas debido a un error." + str(e))
         raise HTTPException(
             status_code=500, detail="Column adjust error: " + str(e))
-    
+

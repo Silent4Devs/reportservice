@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import os
 from routes.reports import reports
-from routes.dashboards import dash
+from dashboards import dash
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
