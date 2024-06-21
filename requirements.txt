@@ -7,5 +7,3 @@ pandas
 openpyxl
 psycopg2
 plotly
-json
-fastapi-cache
