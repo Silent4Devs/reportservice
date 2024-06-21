@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 import os
 from routes.reports import reports
@@ -9,6 +10,7 @@ from dashboards import dash
 load_dotenv()
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.title = os.getenv("APP_NAME")
 app.version = os.getenv("APP_VERSION")
 
