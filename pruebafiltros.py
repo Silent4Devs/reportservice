@@ -1,5 +1,5 @@
-##Para probar usar:
-## uvicorn pruebafiltros:app --reload --port 8001
+# Para probar usar:
+# uvicorn pruebafiltros:app --reload --port 8001
 
 import pandas as pd
 from fastapi.responses import JSONResponse, FileResponse
@@ -29,89 +29,98 @@ now = date.today()
 
 @app.get("/")
 def read_root():
-    return{"message":"hola"}
-    
+    return {"message": "hola"}
 
-## Registro Timesheet *
-@app.get('/registrosTimesheet/{area}/{empleado}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
 
-def getregistroTimesheet(area: str, empleado: str, fecha_inicio: str, fecha_fin: str):
-    #pprint.pprint(f"Area: {area}, Empleado: {empleado}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
-    try:
-        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
-        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
-    
+# Registro Timesheet *
+@app.post('/registrosTimesheet/', tags=["ReportsXls"])
+def get_registro_timesheet(
+    area: Optional[str] = None,
+    empleado: Optional[str] = None,
+    fecha_inicio: Optional[str] = None,
+    fecha_fin: Optional[str] = None
+):
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+            fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
+
     query = """
-            select 
-            to_char(date_trunc('week', t.fecha_dia), 'DD/MM/YYYY') as "Fecha inicio",
-            to_char(t.fecha_dia, 'DD/MM/YYYY') as "Fecha fin",
-            e.name as "Empleado",
-            p.name as "Aprovador",
-            a.area as "Área",
-            t.estatus as "Estatus",
-            sum(
-            coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
-            ) as "Horas de la semana"
-            from timesheet t 
-            inner join empleados e ON t.empleado_id =e.id
-            inner join empleados p ON t.aprobador_id =p.id
-            inner join areas a on e.id =a.empleados_id 
-            inner join timesheet_horas th on t.id=th.timesheet_id  
-            where e.deleted_at is null
-            and a.area = '{area}' 
-            and e.name = '{empleado}' 
-            and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'
-            group by 
-                t.fecha_dia, 
-                e.name, 
-                p.name, 
-                a.area, 
-                t.estatus
-            order by t.fecha_dia desc;
-        """
-    
+        select
+        to_char(date_trunc('week', t.fecha_dia), 'DD/MM/YYYY') as "Fecha inicio",
+        to_char(t.fecha_dia, 'DD/MM/YYYY') as "Fecha fin",
+        e.name as "Empleado",
+        p.name as "Aprovador",
+        a.area as "Área",
+        t.estatus as "Estatus",
+        sum(
+        coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+        ) as "Horas de la semana"
+        from timesheet t
+        inner join empleados e ON t.empleado_id = e.id
+        inner join empleados p ON t.aprobador_id = p.id
+        inner join areas a on e.id = a.empleados_id
+        inner join timesheet_horas th on t.id = th.timesheet_id
+        where e.deleted_at is null
+    """
+
+    if area:
+        query += f" and a.area = '{area}'"
+    if empleado:
+        query += f" and e.name = '{empleado}'"
+    if fecha_inicio and fecha_fin:
+        query += f" and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'"
+
+    query += """
+        group by
+            t.fecha_dia,
+            e.name,
+            p.name,
+            a.area,
+            t.estatus
+        order by t.fecha_dia desc;
+    """
+
     print(query)
 
-    #Imprimir query en txt
     file_path = "query.txt"
     with open(file_path, "w") as file:
         file.write(query)
 
-
-
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
+    exportar_a_excel(resultados, fileRoute)
     ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
-    
+
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
 
-
-## Timesheet Áreas *
+# Timesheet Áreas *
 @app.post("/registrosTimesheet/{area}/{fecha_inicio}/{fecha_fin}")
 # @reports.get('/timesheetAreas', tags=["ReportsXls"])
 def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):
-    pprint.pprint(f"Area: {area}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    pprint.pprint(f"Area: {area}, Fecha inicio: {
+                  fecha_inicio}, Fecha fin: {fecha_fin}")
     try:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
     except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
-    
+        raise HTTPException(
+            status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
+
     query = """
             select 
             e.name as "Nombre",
@@ -136,16 +145,20 @@ def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Timesheet proyectos *
+# Timesheet proyectos *
+
+
 @app.get('/timesheetProyectos/{area}/{proyecto}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
 def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin: str):
-    pprint.pprint(f"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+    pprint.pprint(f"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {
+                  fecha_inicio}, Fecha fin: {fecha_fin}")
     try:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
     except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
-    
+        raise HTTPException(
+            status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
+
     query = """
             select 
             tp.proyecto as "ID-Proyecto",
@@ -174,16 +187,20 @@ def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Registros Colaboradores Tareas 
+# Registros Colaboradores Tareas
+
+
 @app.get('/colaboradoresTareas/{empleado}/{area}/{fecha_inicio}/{fecha_fin}', tags=["ReportsXls"])
-def getcolaboradoresTareas(empleado: str,area: str,  fecha_inicio: str, fecha_fin: str):
-    pprint.pprint(f"Empleado: {empleado},Area: {area},  Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}")   
+def getcolaboradoresTareas(empleado: str, area: str,  fecha_inicio: str, fecha_fin: str):
+    pprint.pprint(f"Empleado: {empleado},Area: {area},  Fecha inicio: {
+                  fecha_inicio}, Fecha fin: {fecha_fin}")
     try:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
     except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
-    
+        raise HTTPException(
+            status_code=400, detail="Formato de fecha incorrecto. Use 'YYYY-MM-DD'.")
+
     query = """
             select 
             tp.fecha_inicio as "Fecha inicio", 
@@ -225,11 +242,13 @@ def getcolaboradoresTareas(empleado: str,area: str,  fecha_inicio: str, fecha_fi
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Timesheet Financiero *
+# Timesheet Financiero *
+
+
 @app.get('/timesheetFinanciero/{proyecto}', tags=["ReportsXls"])
 def gettimesheetFinanciero(proyecto: str):
-    pprint.pprint(f"Proyecto: {proyecto}")   
-    
+    pprint.pprint(f"Proyecto: {proyecto}")
+
     query = """
             tp.identificador as "ID",
             tp.proyecto as "Proyecto",
@@ -284,6 +303,7 @@ def exportar_a_excel(resultados, nombre_archivo):
         raise HTTPException(
             status_code=500, detail="Report error: " + str(e))
 
+
 def ajustar_columnas(nombre_archivo):
     try:
         workbook = load_workbook(nombre_archivo)
@@ -307,4 +327,3 @@ def ajustar_columnas(nombre_archivo):
         print("No se pudieron ajustar las columnas debido a un error." + str(e))
         raise HTTPException(
             status_code=500, detail="Column adjust error: " + str(e))
-

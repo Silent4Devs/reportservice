@@ -927,16 +927,16 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def read_root():\n    return{\"message\":\"hola\"}\n## Registro Timesheet *\n@app.get('/registrosTimesheet/{area}/{empleado}/{fecha_inicio}/{fecha_fin}', tags=[\"ReportsXls\"])\ndef getregistroTimesheet(area: str, empleado: str, fecha_inicio: str, fecha_fin: str):\n    #pprint.pprint(f\"Area: {area}, Empleado: {empleado}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:",
+        "peekOfCode": "def read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):",
         "detail": "pruebafiltros",
         "documentation": {}
     },
     {
-        "label": "getregistroTimesheet",
+        "label": "get_registro_timesheet",
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def getregistroTimesheet(area: str, empleado: str, fecha_inicio: str, fecha_fin: str):\n    #pprint.pprint(f\"Area: {area}, Empleado: {empleado}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"\n            select \n            to_char(date_trunc('week', t.fecha_dia), 'DD/MM/YYYY') as \"Fecha inicio\",",
+        "peekOfCode": "def get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -945,7 +945,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"\n            select \n            e.name as \"Nombre\",",
+        "peekOfCode": "def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -954,7 +954,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"\n            select \n            tp.proyecto as \"ID-Proyecto\",",
+        "peekOfCode": "def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -963,7 +963,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def getcolaboradoresTareas(empleado: str,area: str,  fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Empleado: {empleado},Area: {area},  Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"\n            select \n            tp.fecha_inicio as \"Fecha inicio\", ",
+        "peekOfCode": "def getcolaboradoresTareas(empleado: str, area: str,  fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Empleado: {empleado},Area: {area},  Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -972,7 +972,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetFinanciero(proyecto: str):\n    pprint.pprint(f\"Proyecto: {proyecto}\")   \n    query = \"\"\"\n            tp.identificador as \"ID\",\n            tp.proyecto as \"Proyecto\",\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",\n            tpe.horas_asignadas * tpe.costo_hora as \"Costo total del empleado\",",
+        "peekOfCode": "def gettimesheetFinanciero(proyecto: str):\n    pprint.pprint(f\"Proyecto: {proyecto}\")\n    query = \"\"\"\n            tp.identificador as \"ID\",\n            tp.proyecto as \"Proyecto\",\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",\n            tpe.horas_asignadas * tpe.costo_hora as \"Costo total del empleado\",",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1008,7 +1008,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "app = FastAPI()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return{\"message\":\"hola\"}",
+        "peekOfCode": "app = FastAPI()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1017,7 +1017,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return{\"message\":\"hola\"}\n## Registro Timesheet *",
+        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1026,7 +1026,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "now = date.today()\n@app.get(\"/\")\ndef read_root():\n    return{\"message\":\"hola\"}\n## Registro Timesheet *\n@app.get('/registrosTimesheet/{area}/{empleado}/{fecha_inicio}/{fecha_fin}', tags=[\"ReportsXls\"])\ndef getregistroTimesheet(area: str, empleado: str, fecha_inicio: str, fecha_fin: str):\n    #pprint.pprint(f\"Area: {area}, Empleado: {empleado}, Fecha inicio: {fecha_inicio}, Fecha fin: {fecha_fin}\")   \n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")",
+        "peekOfCode": "now = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,",
         "detail": "pruebafiltros",
         "documentation": {}
     }
