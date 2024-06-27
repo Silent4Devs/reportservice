@@ -305,17 +305,165 @@ dash= APIRouter()
 # registros_timesheetMes_dona()
 
 ###############  Timesheet Proyectos #######################
+# if cursor is None:
+#     raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
+
+# def timesheet_proyectos_area(cursor): 
+#     # Definir el query
+#     query = """
+#         select 
+#         a.area as "Áreas",
+#         count(tt.tarea) as "Tareas Asignadas del Proyecto" ,
+#         sum(
+#             coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+#         ) as "Horas invertidas"
+#         from timesheet_proyectos tp 
+#         inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
+#         inner join areas a on tt.area_id=a.id 
+#         inner join timesheet_horas th on tt.id =th.tarea_id 
+#         group by a.area
+#         order by a.area
+#     """
+    
+#     # Ejecutar la consulta SQL y obtener los datos
+#     def ejecutar_consulta_sql(cursor, consulta):
+#         try:
+#             cursor.execute(consulta)
+#             resultados = cursor.fetchall()
+#             colnames = [desc[0] for desc in cursor.description]
+#             df = pd.DataFrame(resultados, columns=colnames)
+#             return df
+#         except psycopg2.Error as e:
+#             raise HTTPException(status_code=500, detail="Error al ejecutar la consulta SQL: " + str(e))
+    
+#     df = ejecutar_consulta_sql(cursor, query)
+ 
+#     # Crear la gráfica
+#     fig = go.Figure(data=[
+#         go.Bar(name='Horas invertidas', y=df['Áreas'], x=df['Horas invertidas'], orientation='h'),
+#         go.Bar(name='Tareas Asignadas del Proyecto', y=df['Áreas'], x=df['Tareas Asignadas del Proyecto'], orientation='h')
+#     ])
+    
+#     # Actualizar el diseño de la gráfica
+#     fig.update_layout(
+#         title='Proyectos',
+#         xaxis_title='Horas Trabajadas en el Proyecto',
+#         yaxis_title='Área',
+#         barmode='group',
+#         bargap=0.15,
+#         bargroupgap=0.1
+#     )
+#     fig.show()
+# timesheet_proyectos_area(cursor)
+
+
+#############################
+# if cursor is None:
+#     raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
+ 
+# def timesheet_horas_area_dona():
+#     query = """
+#         select 
+#         a.area as "Áreas",
+#         tp.proyecto as "Proyecto",
+#         count(tt.tarea) as "Tareas Asignadas" ,
+#         sum(
+#             coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+#         ) as "Horas invertidas"
+#         from timesheet_proyectos tp 
+#         inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
+#         inner join areas a on tt.area_id=a.id 
+#         inner join timesheet_horas th on tt.id =th.tarea_id 
+#         group by a.area, tp.proyecto 
+#         order by a.area
+#     """
+#     df = pd.read_sql(query, conexion)
+    
+#     labels = df['Áreas'].tolist()  
+#     values = df['Horas invertidas'].tolist() 
+
+#     # Crear la gráfica de dona
+#     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
+
+#     # Actualizar el layout de la gráfica
+#     fig.update_layout(
+#         title='Horas Invertidas en el Proyecto por Área',
+#         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
+#     )
+
+#     # Mostrar la gráfica
+#     fig.show()
+ 
+# # Llamar a la función para generar y mostrar la gráfica
+# timesheet_horas_area_dona()
+
+# ################ 
+# if cursor is None:
+#     raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
+ 
+# def timesheet_horas_area_dona():
+#     query = """
+#         select 
+#         a.area as "Áreas",
+#         tp.proyecto as "Proyecto",
+#         count(tt.tarea) as "Tareas Asignadas" ,
+#         sum(
+#             coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+#             coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+#         ) as "Horas invertidas"
+#         from timesheet_proyectos tp 
+#         inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
+#         inner join areas a on tt.area_id=a.id 
+#         inner join timesheet_horas th on tt.id =th.tarea_id 
+#         group by a.area, tp.proyecto 
+#         order by a.area
+#     """
+#     df = pd.read_sql(query, conexion)
+    
+#     labels = df['Áreas'].tolist()  
+#     values = df['Tareas Asignadas'].tolist() 
+
+#     # Crear la gráfica de dona
+#     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
+
+#     # Actualizar el layout de la gráfica
+#     fig.update_layout(
+#         title='Tareas en el Proyecto por Área',
+#         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
+#     )
+
+#     # Mostrar la gráfica
+#     fig.show()
+ 
+# # Llamar a la función para generar y mostrar la gráfica
+# timesheet_horas_area_dona()
+
+## Horas trabajadas en proyecto por empleado (Barras verticales) 
 if cursor is None:
     raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
 
-def timesheet_proyectos_area(cursor): 
-    # Definir el query
+def timesheet_horasarea_emp():
     query = """
         select 
-        a.area as "Áreas",
-        tp.proyecto as "Proyecto",
-        count(tt.tarea) as "Tareas Asignadas del Proyecto" ,
-        sum(
+        concat(e.name, ' - ', a.area) AS "Empleado",
+                sum(
             coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
             coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
             coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
@@ -323,16 +471,17 @@ def timesheet_proyectos_area(cursor):
             coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
             coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
             coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
-        ) as "Horas invertidas"
+        ) as "Horas trabajadas en proyecto"
         from timesheet_proyectos tp 
-        inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
-        inner join areas a on tt.area_id=a.id 
+        left join timesheet_tareas tt on tp.id=tt.proyecto_id  
         inner join timesheet_horas th on tt.id =th.tarea_id 
-        group by a.area, tp.proyecto 
+        inner join empleados e on th.empleado_id =e.id
+        left join areas a on e.area_id =a.id
+        where a.area='Arquitectura'
+        group by e.name, a.area
         order by a.area
     """
     
-    # Ejecutar la consulta SQL y obtener los datos
     def ejecutar_consulta_sql(cursor, consulta):
         try:
             cursor.execute(consulta)
@@ -345,82 +494,22 @@ def timesheet_proyectos_area(cursor):
     
     df = ejecutar_consulta_sql(cursor, query)
     
-    # Crear la gráfica
+    # Crear la gráfica de barras
     fig = go.Figure(data=[
-        go.Bar(name='Horas invertidas', y=df['Área'], x=df['Horas invertidas'], orientation='h'),
-        go.Bar(name='Tareas Asignadas del Proyecto', y=df['Área'], x=df['Tareas Asignadas del Proyecto'], orientation='h')
+        go.Bar(name='Registros de horas trabajadas por Área', x=df['Empleado'], y=df['Horas trabajadas en proyecto'])
     ])
     
-    # Actualizar el diseño de la gráfica
-    fig.update_layout(
-        title='Proyectos',
-        xaxis_title='Horas Trabajadas en el Proyecto',
-        yaxis_title='Área',
-        barmode='group',
-        bargap=0.15,
-        bargroupgap=0.1
-    )
-    fig.show()
-timesheet_proyectos_area(cursor)
-
-
-#############################
-if cursor is None:
-    raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
- 
-def timesheet_horas_area_dona():
-    query = """
-        
-    """
-    df = pd.read_sql(query, conexion)
-    
-    labels = df.columns.tolist()  #Estatus
-    values = df.iloc[0].tolist()  # Valores correspondientes a cada estatus
-
-    # Crear la gráfica de dona
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
-
     # Actualizar el layout de la gráfica
     fig.update_layout(
-        title='Registros de Timesheet por Estatus',
-        annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
+        title='Horas Trabajadas en Proyecto',
+        xaxis_title='Empleados en Proyecto',
+        yaxis_title='Horas invertidas',
+        bargap=0.15
     )
-
-    # Mostrar la gráfica
-    fig.show()
- 
-# Llamar a la función para generar y mostrar la gráfica
-timesheet_horas_area_dona()
-
-################ 
-if cursor is None:
-    raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
- 
-def timesheet_tareas_area_dona():
-    query = """
-        
-    """
-    df = pd.read_sql(query, conexion)
     
-    labels = df.columns.tolist()  #Estatus
-    values = df.iloc[0].tolist()  # Valores correspondientes a cada estatus
-
-    # Crear la gráfica de dona
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
-
-    # Actualizar el layout de la gráfica
-    fig.update_layout(
-        title='Registros de Timesheet por Estatus',
-        annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
-    )
-
     # Mostrar la gráfica
     fig.show()
- 
-# Llamar a la función para generar y mostrar la gráfica
-timesheet_tareas_area_dona()
-
-
+timesheet_horasarea_emp()
 
 # Cerrar la conexión a la base de datos
 cursor.close()

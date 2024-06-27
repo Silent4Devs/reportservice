@@ -27,13 +27,6 @@ if not os.path.exists(DirectoryEmpleados):
 
 now = date.today()
 
-# Validar si la carpeta ya existe
-if not os.path.exists(DirectoryEmpleados):
-    # Si no existe, crear la carpeta
-    os.makedirs(DirectoryEmpleados)
-
-now = date.today()
-
 @reports.get('/empleados', tags=["ReportsXls"])
 def getEmpleados():
     return {"message": "empleados"}
@@ -454,17 +447,20 @@ def getcategoriasCapacitaciones():
 @reports.get('/visualizarLogs', tags=["ReportsXls"])
 def getvisualizarLogs():
     query = """
-            select 
-            u.name as "Nombre",
-            a.event as "Evento",
-            a.old_values as "Antiguos valores",
-            a.new_values as "Nuevos valores",
-            a.url as "Url",
-            a.created_at as "Fecha de creación",
-            a.updated_at as "Fecha de actualización"
-            from audits a 
-            inner join users u on a.user_id =u.id 
-            where u.deleted_at is null;
+        select 
+        a.id as "ID",
+        u.name as "User",
+        a.event as "Event",
+        a.old_values as "Old Value",
+        a.new_values as "New Value",
+        a.url as "Url",
+        a.tags as "Tags",
+        a.created_at as "Fecha creación",
+        a.updated_at as "Fecha última actualización"
+        from audits a 
+        inner join users u on a.user_id =u.id 
+        where u.deleted_at is null
+        order by a.created_at desc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "visualizarLogs" + str(now) + ".xlsx"
@@ -476,6 +472,9 @@ def getvisualizarLogs():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+
+    
 
 
 ## Registro Timesheet ## with filter
