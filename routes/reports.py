@@ -32,7 +32,7 @@ def getEmpleados():
     return {"message": "empleados"}
 
 # Users #############
-@reports.get('/Users', tags=["ReportsXls"])
+@reports.get('/users', tags=["ReportsXls"])
 def retrieve_all_item():
     query = """
             select  
@@ -213,7 +213,7 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "sedes" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     ajustar_columnas(fileRoute)
@@ -472,8 +472,6 @@ def getvisualizarLogs():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
-
-
     
 
 

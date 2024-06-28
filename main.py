@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 import os
 from routes.reports import reports,app
-#from dashboards import dash
+from routes.dashboards import dash
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
@@ -15,7 +15,7 @@ app.title = os.getenv("APP_NAME")
 app.version = os.getenv("APP_VERSION")
 
 app.include_router(reports)
-#app.include_router(dash)
+app.include_router(dash)
 
 # tags=["Home"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación
 
