@@ -1,25 +1,19 @@
 
-        select 
-        e.name as "Empleado",
-                sum(
-            coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
-        ) as "Horas trabajadas en proyecto"
-        from timesheet_proyectos tp 
-        left join timesheet_tareas tt on tp.id=tt.proyecto_id  
-        inner join timesheet_horas th on tt.id =th.tarea_id 
-        inner join empleados e on th.empleado_id =e.id
-        left join areas a on e.area_id =a.id
-        where 1=1
+        select
+            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as "Registros Aprobados",
+            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as "Registros Rechazados",
+            sum(case when t.estatus = 'pendiente' then 1 else 0 end) as "Pendiente",
+            sum(case when t.estatus = 'borrador' then 1 else 0 end) as "Borrador",
+            count(*) as "Registros Totales"
+        from (
+        select *
+        from timesheet t
+        where t.fecha_dia BETWEEN CURRENT_DATE - INTERVAL '1 MONTH' AND CURRENT_DATE
+        )t
+        left join empleados e on t.empleado_id=e.id 
+        left join areas a on e.area_id =a.id 
+        where t.estatus in ('aprobado', 'rechazado')        
     
-        group by 
-            a.area,
-            e.name,
-            tp.proyecto
-        order by a.area
+        group by
+            a.area
     

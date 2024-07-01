@@ -10,6 +10,7 @@ from typing import Optional
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 import os
+import json
 
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, Query, HTTPException
@@ -17,6 +18,7 @@ from datetime import date, datetime
 
 app = FastAPI()
 reports = APIRouter()
+repo_fil=APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
 
@@ -463,11 +465,30 @@ def getvisualizarLogs():
         order by a.created_at desc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No data found for the query")
+
+    df = pd.DataFrame(resultados)
+
+    def limpiar_json(columna):
+        def extraer_datos(json_str):
+            try:
+                data = json.loads(json_str)
+                result = f"id: {data['id']}, especificaciones: {data['especificaciones']}, cantidad: {data['cantidad']}"
+                return result
+            except json.JSONDecodeError:
+                return json_str
+        return columna.apply(extraer_datos)
+
+    df['Old Value'] = limpiar_json(df['Old Value'])
+    df['New Value'] = limpiar_json(df['New Value'])
+
     fileRoute = DirectoryEmpleados + "visualizarLogs" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
+    df.to_excel(fileRoute, index=False)
+    exportar_a_excel(resultados, fileRoute)
     ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
+
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
@@ -476,7 +497,7 @@ def getvisualizarLogs():
 
 
 ## Registro Timesheet ## with filter
-@app.post('/registrosTimesheet/', tags=["ReportsXls"])
+@repo_fil.post('/registrosTimesheet/', tags=["ReportsXls"])
 def get_registro_timesheet(
     area: Optional[str] = None,
     empleado: Optional[str] = None,
@@ -553,7 +574,7 @@ def get_registro_timesheet(
 
 
 ## Timesheet Áreas  ## with filter
-@app.post("/timesheetAreas/", tags=["ReportsXls"])
+@repo_fil.post("/timesheetAreas/", tags=["ReportsXls"])
 def gettimesheetAreas(
     area: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -607,7 +628,7 @@ def gettimesheetAreas(
 
 
 ## Timesheet proyectos ## with filter
-@app.post('/timesheetProyectos/', tags=["ReportsXls"])
+@repo_fil.post('/timesheetProyectos/', tags=["ReportsXls"])
 def gettimesheetProyectos(
     area: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -670,7 +691,7 @@ def gettimesheetProyectos(
 
 
 ## Registros Colaboradores Tareas ## with filter 
-@app.post('/colaboradoresTareas/', tags=["ReportsXls"])
+@repo_fil.post('/colaboradoresTareas/', tags=["ReportsXls"])
 def getcolaboradoresTareas(
     empleado: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -749,7 +770,7 @@ def getcolaboradoresTareas(
 
 
 ## Timesheet Financiero ## with filter
-@app.post('/timesheetFinanciero/', tags=["ReportsXls"])
+@repo_fil.post('/timesheetFinanciero/', tags=["ReportsXls"])
 def gettimesheetFinanciero(
     proyecto: Optional[str] = None):
 
@@ -897,7 +918,7 @@ def getevaluaciones360():
     return FileResponse(excel_path)
 
 ## Empleados controller
-@app.post('/empleadosController/', tags=["ReportsXls"])
+@repo_fil.post('/empleadosController/', tags=["ReportsXls"])
 def getempleadoController(
     empleado: Optional[str] = None
     ):

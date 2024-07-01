@@ -74,8 +74,9 @@ def registros_timesheet_estatus(
         bargap=0.15,
         bargroupgap=0.1
     )
-    fig.show()
-registros_timesheet_estatus()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
     
 
 
@@ -121,8 +122,9 @@ def registros_timesheet_status_dona(
         title='Registros de Timesheet por Estatus',
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
-    fig.show()
-registros_timesheet_status_dona()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ################################################ (Barras Vertical)
 
@@ -188,8 +190,9 @@ def registros_timesheet_area(
     )
     
     # Mostrar la gráfica
-    fig.show()
-registros_timesheet_area()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 
 ############## Registros Timesheet Empleados ############## (Barras Horizontales)
@@ -259,8 +262,9 @@ def registros_tsempleados_estatus(
     )
     
     # Mostrar la gráfica
-    fig.show()    
-registros_tsempleados_estatus()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ###################################################### (Sin filtro , no lleva/Registros Timesheet por Área Dona)
 
@@ -306,11 +310,9 @@ def registros_timesheetArea_dona():
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    # Mostrar la gráfica
-    fig.show()
- 
-# Llamar a la función para generar y mostrar la gráfica
-registros_timesheetArea_dona()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ################################################# (Dona ultimo mes)
 
@@ -366,8 +368,9 @@ def registros_timesheetMes_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    fig.show()
-registros_timesheetMes_dona()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ####################  Timesheet Proyectos ####################### (Proyecto Areas Horizontal)
 if cursor is None:
@@ -447,8 +450,9 @@ def timesheet_proyectos_area(cursor,
         bargap=0.15,
         bargroupgap=0.1
     )
-    fig.show()
-timesheet_proyectos_area(cursor)
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 
 ############################ (Horas Invertidas en el Proyecto por Área Dona)
@@ -515,11 +519,9 @@ def timesheet_horas_area_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    # Mostrar la gráfica
-    fig.show()
- 
-# Llamar a la función para generar y mostrar la gráfica
-timesheet_horas_area_dona()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ################ (Tareas en el Proyecto por Área Dona)
 if cursor is None:
@@ -580,11 +582,9 @@ def timesheet_horas_area_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    # Mostrar la gráfica
-    fig.show()
- 
-# Llamar a la función para generar y mostrar la gráfica
-timesheet_horas_area_dona()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ###################### Horas trabajadas en proyecto por empleado (Barras verticales) 
 if cursor is None:
@@ -655,9 +655,9 @@ def timesheet_horasarea_emp(
         bargap=0.15
     )
     
-    # Mostrar la gráfica
-    fig.show()
-timesheet_horasarea_emp()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 ##################### Dashboard Timesheet Financiero #############################3
 if cursor is None:
@@ -732,9 +732,9 @@ def timesheet_horasarea_emp(
         bargap=0.15
     )
     
-    # Mostrar la gráfica
-    fig.show()
-timesheet_horasarea_emp()
+    graph_json = fig.to_json()
+    
+    return JSONResponse(content=graph_json)
 
 
 
