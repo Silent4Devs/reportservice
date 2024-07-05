@@ -1,7 +1,7 @@
 import pandas as pd
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, FileResponse
-from config.database import cursor
+from config.database import cursor, get_conexion
 import pandas as pd
 import psycopg2
 from pathlib import Path
@@ -430,7 +430,9 @@ def getglosario():
 @reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
 def getcategoriasCapacitaciones():
     query = """
-            select distinct cc.nombre as "Nombre"
+            select 
+            cc.id as "No.",
+            distinct cc.nombre as "Nombre"
             from recursos r 
             inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id  ;
         """
@@ -850,9 +852,10 @@ def getsolicitudesDayOff():
 
 ## Vista GLobal Solicitudes de Vacaciones
 @reports.get('/solicitudesVacaciones', tags=["ReportsXls"])
-def getsolicitudesVacaciones():
+def get_solicitudes_Vacaciones():
     query = """
-            select e.name as "Solicitante",
+            select 
+            e.name as "Solicitante",
             sv.descripcion as "Descripción",
             sv.año as "Periodo",
             sv.dias_solicitados  as "Días solicitados",
@@ -868,16 +871,41 @@ def getsolicitudesVacaciones():
             inner join empleados e on sv.empleado_id =e.id 
             order by sv.fecha_inicio desc 
         """
-    resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    
+    connection = get_conexion()
+    if connection is None:
+        raise HTTPException(status_code=500, detail="Could not connect to the database")
+    
+    cursor = connection.cursor()
+    try:
+        resultados = ejecutar_consulta_sql(cursor, query)
+        # Pasar el cursor junto con los resultados para exportar a Excel
+        file_route = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
+        exportar_a_excel(resultados, file_route, cursor)
+    finally:
+        cursor.close()
+        connection.close()
+    
+    ajustar_columnas(file_route)
+    
+    excel_path = Path(file_route)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="File not found on the server")
     return FileResponse(excel_path)
+
+
+
+    
+    # resultados = ejecutar_consulta_sql(cursor, query)
+    #  fileRoute = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
+    # exportar_a_excel(
+    #     resultados, fileRoute)
+    
+    # ajustar_columnas(fileRoute)
+    # excel_path = Path(fileRoute)
+    # if not excel_path.is_file():
+    #     raise HTTPException(status_code=404, detail="file not found on the server")
+    # return FileResponse(excel_path)
 
 ## Evaluaciones 360
 @reports.get('/evaluaciones360', tags=["ReportsXls"])
@@ -986,10 +1014,14 @@ def ejecutar_consulta_sql(cursor, consulta):
 def exportar_a_excel(resultados, nombre_archivo):
     try:
         if resultados is not None:
+            connection = get_conexion()
+            cursor = connection.cursor()
             df = pd.DataFrame(resultados, columns=[
                 desc[0] for desc in cursor.description])
             df.to_excel(nombre_archivo, index=False)
             print("Resultados exportados a", nombre_archivo)
+            cursor.close()
+            connection.close()
     except Exception as e:
         print("No se pudieron exportar los resultados a Excel debido a un error." + str(e))
         raise HTTPException(
@@ -1016,5 +1048,4 @@ def ajustar_columnas(nombre_archivo):
         print("Columnas ajustadas en", nombre_archivo)
     except Exception as e:
         print("No se pudieron ajustar las columnas debido a un error." + str(e))
-        raise HTTPException(
-            status_code=500, detail="Column adjust error: " + str(e))
+        raise HTTPException(status_code=500, detail="Column adjust error: " + str(e))
