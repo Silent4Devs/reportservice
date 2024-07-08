@@ -1,5 +1,49 @@
 [
     {
+        "label": "runpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "runpy",
+        "description": "runpy",
+        "detail": "runpy",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "site",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "site",
+        "description": "site",
+        "detail": "site",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
         "label": "load_dotenv",
         "importPath": "dotenv",
         "description": "dotenv",
@@ -30,15 +74,6 @@
         "importPath": "psycopg2",
         "description": "psycopg2",
         "detail": "psycopg2",
-        "documentation": {}
-    },
-    {
-        "label": "os",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "os",
-        "description": "os",
-        "detail": "os",
         "documentation": {}
     },
     {
@@ -420,11 +455,11 @@
         "documentation": {}
     },
     {
-        "label": "dash",
-        "importPath": "dashboards",
-        "description": "dashboards",
+        "label": "app",
+        "importPath": "routes.reports",
+        "description": "routes.reports",
         "isExtraImport": true,
-        "detail": "dashboards",
+        "detail": "routes.reports",
         "documentation": {}
     },
     {
@@ -437,12 +472,84 @@
         "documentation": {}
     },
     {
-        "label": "sys",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "sys",
-        "description": "sys",
-        "detail": "sys",
+        "label": "bin_dir",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"Scripts\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"reportservice\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "base",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "base = bin_dir[: -len(\"Scripts\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"reportservice\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PATH\"]",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"reportservice\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV\"]",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"reportservice\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"reportservice\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "prev_length",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"..\\\\Lib\\\\site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.path[:]",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.real_prefix",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.prefix",
+        "kind": 5,
+        "importPath": ".venv.Scripts.activate_this",
+        "description": ".venv.Scripts.activate_this",
+        "peekOfCode": "sys.prefix = base",
+        "detail": ".venv.Scripts.activate_this",
         "documentation": {}
     },
     {
@@ -671,11 +778,11 @@
         "documentation": {}
     },
     {
-        "label": "getregistroTimesheet",
+        "label": "get_registro_timesheet",
         "kind": 2,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "def getregistroTimesheet():\n    query = \"\"\"\n            select \n            th.created_at as \"Fecha inicio\",\n            th.updated_at as \"Fecha fin\",\n            e.name as \"Empleado\",\n            p.name as \"Aprobador\",\n            a.area as \"Área\",\n            t.estatus as \"Estatus\",\n            sum(",
+        "peekOfCode": "def get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -684,7 +791,7 @@
         "kind": 2,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "def gettimesheetAreas():\n    query = \"\"\"\n            select \n            e.name as \"Nombre\",\n            p.puesto as \"Puesto\",\n            a.area as \"Área\",\n            e.estatus as \"Estatus\",\n            e.antiguedad as \"Fecha\"\n            from empleados e \n            inner join puestos p on e.puesto_id =p.id ",
+        "peekOfCode": "def gettimesheetAreas(\n    area: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n        except ValueError:",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -693,7 +800,7 @@
         "kind": 2,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "def gettimesheetProyectos():\n    query = \"\"\"\n            select \n            tp.proyecto as \"ID-Proyecto\",\n            string_agg(distinct a.area, ', ') as \"Áreas participantes\",\n            string_agg(distinct e.name, ', ') as \"Empleados participantes\",\n            tc.nombre as \"Cliente\"\n            from timesheet_proyectos tp \n            left join timesheet_proyectos_empleados tpe on tp.id=tpe.proyecto_id \n            left join timesheet_proyectos_areas tpa on tp.id =tpe.proyecto_id ",
+        "peekOfCode": "def gettimesheetProyectos(\n    area: Optional[str] = None,\n    proyecto: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n    ):\n    if fecha_inicio and fecha_fin:   \n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -702,7 +809,7 @@
         "kind": 2,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "def getcolaboradoresTareas():\n    query = \"\"\"\n            select \n            tp.fecha_inicio as \"Fecha inicio\", \n            tp.fecha_fin as \"Fecha fin\",\n            string_agg(distinct e.name, ', ') as  \"Empleado\",\n            string_agg(distinct s.name, ', ') as \"Supervisor\",\n            string_agg(distinct tp.proyecto, ', ') as \"Proyecto\",\n            string_agg(distinct tt.tarea, ', ') as \"Tarea\",\n            th.descripcion as \"Descripción\",",
+        "peekOfCode": "def getcolaboradoresTareas(\n    empleado: Optional[str] = None,\n    proyecto: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n    ):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -711,7 +818,7 @@
         "kind": 2,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "def gettimesheetFinanciero():\n    query = \"\"\"\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",\n            tpe.horas_asignadas * tpe.costo_hora as \"Costo total del empleado\",\n            tp.estatus as \"Estatus\",\n            sum(tpe.horas_asignadas)over(partition by tpe.proyecto_id) as \"Horas totales del proyecto\",\n            sum(tpe.horas_asignadas * tpe.costo_hora) over(partition by tpe.proyecto_id) as \"Costo total del Proyecto\"",
+        "peekOfCode": "def gettimesheetFinanciero(\n    proyecto: Optional[str] = None):\n    query = \"\"\"\n            select\n            tp.identificador as \"ID\",\n            tp.proyecto as \"Proyecto\",\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -743,6 +850,15 @@
         "documentation": {}
     },
     {
+        "label": "getempleadoController",
+        "kind": 2,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "def getempleadoController(\n    empleado: Optional[str] = None\n    ):\n    query = \"\"\"\n            select \n            e.name as \"Empleado\",\n            p.name as \"Supervisor\",\n            s.sede as \"Sede\",\n            pe.nombre as \"Perfil\",\n            string_agg(distinct ce.nombre, ', ' ) as \"Certificaciones\",",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
         "label": "ejecutar_consulta_sql",
         "kind": 2,
         "importPath": "routes.reports",
@@ -774,7 +890,7 @@
         "kind": 5,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "app = FastAPI()\nreports = APIRouter()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@reports.get('/empleados', tags=[\"ReportsXls\"])\ndef getEmpleados():",
+        "peekOfCode": "app = FastAPI()\nreports = APIRouter()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -783,7 +899,7 @@
         "kind": 5,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "reports = APIRouter()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@reports.get('/empleados', tags=[\"ReportsXls\"])\ndef getEmpleados():\n    return {\"message\": \"empleados\"}",
+        "peekOfCode": "reports = APIRouter()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -792,7 +908,16 @@
         "kind": 5,
         "importPath": "routes.reports",
         "description": "routes.reports",
-        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@reports.get('/empleados', tags=[\"ReportsXls\"])\ndef getEmpleados():\n    return {\"message\": \"empleados\"}\n# Users #############",
+        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)",
+        "detail": "routes.reports",
+        "documentation": {}
+    },
+    {
+        "label": "now",
+        "kind": 5,
+        "importPath": "routes.reports",
+        "description": "routes.reports",
+        "peekOfCode": "now = date.today()\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@reports.get('/empleados', tags=[\"ReportsXls\"])\ndef getEmpleados():\n    return {\"message\": \"empleados\"}\n# Users #############",
         "detail": "routes.reports",
         "documentation": {}
     },
@@ -806,65 +931,29 @@
         "documentation": {}
     },
     {
-        "label": "registros_timesheet_estatus",
+        "label": "timesheet_proyectos_area",
         "kind": 2,
         "importPath": "dashboards",
         "description": "dashboards",
-        "peekOfCode": "def registros_timesheet_estatus(): \n    # Definir el query\n    query = \"\"\"\n    SELECT\n        count(case when t.estatus = 'aprobado' then 1 end) as \"Aprobado\",\n        count(case when t.estatus = 'pendiente' then 1 end) as \"Pendiente\",\n        count(case when t.estatus = 'rechazado' then 1 end) as \"Rechazado\",\n        count(case when t.estatus = 'borrador' then 1 end) as \"Borrador\",\n        a.area as \"Área\"\n    FROM timesheet t",
+        "peekOfCode": "def timesheet_proyectos_area(cursor): \n    # Definir el query\n    query = \"\"\"\n        select \n        a.area as \"Áreas\",\n        tp.proyecto as \"Proyecto\",\n        count(tt.tarea) as \"Tareas Asignadas del Proyecto\" ,\n        sum(\n            coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +\n            coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +",
         "detail": "dashboards",
         "documentation": {}
     },
     {
-        "label": "get_timesheet_estatus",
+        "label": "timesheet_horas_area_dona",
         "kind": 2,
         "importPath": "dashboards",
         "description": "dashboards",
-        "peekOfCode": "def get_timesheet_estatus():\n    try:\n        graph_json = registros_timesheet_estatus()\n        return JSONResponse(content=graph_json)\n    except Exception as e:\n        raise HTTPException(status_code=500, detail=str(e))\n################################################\nif cursor is None:\n    raise HTTPException(status_code=500, detail=\"No se pudo establecer la conexión a la base de datos\")\ndef registros_timesheet_area():",
+        "peekOfCode": "def timesheet_horas_area_dona():\n    query = \"\"\"\n    \"\"\"\n    df = pd.read_sql(query, conexion)\n    labels = df.columns.tolist()  #Estatus\n    values = df.iloc[0].tolist()  # Valores correspondientes a cada estatus\n    # Crear la gráfica de dona\n    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])\n    # Actualizar el layout de la gráfica\n    fig.update_layout(",
         "detail": "dashboards",
         "documentation": {}
     },
     {
-        "label": "registros_timesheet_area",
+        "label": "timesheet_tareas_area_dona",
         "kind": 2,
         "importPath": "dashboards",
         "description": "dashboards",
-        "peekOfCode": "def registros_timesheet_area():\n    query = \"\"\"\n                select\n                a.area as \"Área\",\n                sum(\n                    coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +",
-        "detail": "dashboards",
-        "documentation": {}
-    },
-    {
-        "label": "registros_timesheet_status_dona",
-        "kind": 2,
-        "importPath": "dashboards",
-        "description": "dashboards",
-        "peekOfCode": "def registros_timesheet_status_dona():\n    query = \"\"\"\n        SELECT\n            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as \"Aprobado\",\n            sum(case when t.estatus = 'pendiente' then 1 else 0 end) as \"Pendiente\",\n            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as \"Rechazado\",\n            sum(case when t.estatus = 'borrador' then 1 else 0 end) as \"Borrador\"\n        FROM timesheet t;\n    \"\"\"\n    df = pd.read_sql(query, conexion)",
-        "detail": "dashboards",
-        "documentation": {}
-    },
-    {
-        "label": "registros_tsempleados_estatus",
-        "kind": 2,
-        "importPath": "dashboards",
-        "description": "dashboards",
-        "peekOfCode": "def registros_tsempleados_estatus(): \n    # Definir el query\n    query = \"\"\"\n            select e.name as \"Empleado\",\n            a.area as \"Área\",\n            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as \"Aprobado\",\n            sum(case when t.estatus = 'pendiente' then 1 else 0 end) as \"Pendiente\",\n            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as \"Rechazado\",\n            sum(case when t.estatus = 'borrador' then 1 else 0 end) as \"Borrador\"\n            from timesheet t",
-        "detail": "dashboards",
-        "documentation": {}
-    },
-    {
-        "label": "registros_timesheetArea_dona",
-        "kind": 2,
-        "importPath": "dashboards",
-        "description": "dashboards",
-        "peekOfCode": "def registros_timesheetArea_dona():\n    query = \"\"\"\n                select\n                a.area as \"Área\",\n                sum(\n                    coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +\n                    coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +",
-        "detail": "dashboards",
-        "documentation": {}
-    },
-    {
-        "label": "registros_timesheetMes_dona",
-        "kind": 2,
-        "importPath": "dashboards",
-        "description": "dashboards",
-        "peekOfCode": "def registros_timesheetMes_dona():\n    query = \"\"\"\n        select\n            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as \"Registros Aprobados\",\n            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as \"Registros Rechazados\",\n            sum(case when t.estatus = 'pendiente' then 1 else 0 end) as \"Pendiente\",\n            sum(case when t.estatus = 'borrador' then 1 else 0 end) as \"Borrador\",\n            count(*) as \"Registros Totales\"\n        from (\n        select *",
+        "peekOfCode": "def timesheet_tareas_area_dona():\n    query = \"\"\"\n    \"\"\"\n    df = pd.read_sql(query, conexion)\n    labels = df.columns.tolist()  #Estatus\n    values = df.iloc[0].tolist()  # Valores correspondientes a cada estatus\n    # Crear la gráfica de dona\n    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])\n    # Actualizar el layout de la gráfica\n    fig.update_layout(",
         "detail": "dashboards",
         "documentation": {}
     },
@@ -873,7 +962,7 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "peekOfCode": "def message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})\n@app.post('/', tags=[\"ReportsXls\"])\ndef read_root():\n    return {\"message\": \"Hi\"}",
         "detail": "main",
         "documentation": {}
     },
@@ -882,7 +971,16 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "peekOfCode": "def movies():\n    return JSONResponse(content={\"message\": \"movies\"})\n@app.post('/', tags=[\"ReportsXls\"])\ndef read_root():\n    return {\"message\": \"Hi\"}",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "read_root",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def read_root():\n    return {\"message\": \"Hi\"}",
         "detail": "main",
         "documentation": {}
     },
@@ -891,7 +989,7 @@
         "kind": 5,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "app = FastAPI()\napp.add_middleware(GZipMiddleware, minimum_size=1000)\napp.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\napp.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}",
+        "peekOfCode": "app = FastAPI()\napp.add_middleware(GZipMiddleware, minimum_size=1000)\napp.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n#app.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}",
         "detail": "main",
         "documentation": {}
     },
@@ -900,7 +998,7 @@
         "kind": 5,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "app.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\napp.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():",
+        "peekOfCode": "app.title = os.getenv(\"APP_NAME\")\napp.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n#app.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():",
         "detail": "main",
         "documentation": {}
     },
@@ -909,7 +1007,7 @@
         "kind": 5,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "app.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\napp.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
+        "peekOfCode": "app.version = os.getenv(\"APP_VERSION\")\napp.include_router(reports)\n#app.include_router(dash)\n# tags=[\"Home\"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación\n@app.get('/', tags=[\"Home\"])\ndef message():\n    return {\"Hello World!\"}\n@app.get('/movies', tags=[\"Movies\"])\ndef movies():\n    return JSONResponse(content={\"message\": \"movies\"})",
         "detail": "main",
         "documentation": {}
     },
@@ -927,7 +1025,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):",
+        "peekOfCode": "def read_root():\n    return {\"message\": \"Hi\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -945,7 +1043,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetAreas(area: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
+        "peekOfCode": "def gettimesheetAreas(\n    area: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n        except ValueError:",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -954,7 +1052,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetProyectos(area: str, proyecto: str, fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Area: {area}, Proyecto: {proyecto}, Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
+        "peekOfCode": "def gettimesheetProyectos(\n    area: Optional[str] = None,\n    proyecto: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n    ):\n    if fecha_inicio and fecha_fin:   \n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -963,7 +1061,7 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def getcolaboradoresTareas(empleado: str, area: str,  fecha_inicio: str, fecha_fin: str):\n    pprint.pprint(f\"Empleado: {empleado},Area: {area},  Fecha inicio: {\n                  fecha_inicio}, Fecha fin: {fecha_fin}\")\n    try:\n        fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n        fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")\n    except ValueError:\n        raise HTTPException(\n            status_code=400, detail=\"Formato de fecha incorrecto. Use 'YYYY-MM-DD'.\")\n    query = \"\"\"",
+        "peekOfCode": "def getcolaboradoresTareas(\n    empleado: Optional[str] = None,\n    proyecto: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,\n    fecha_fin: Optional[str] = None\n    ):\n    if fecha_inicio and fecha_fin:\n        try:\n            fecha_inicio_dt = datetime.strptime(fecha_inicio, \"%Y-%m-%d\")\n            fecha_fin_dt = datetime.strptime(fecha_fin, \"%Y-%m-%d\")",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -972,7 +1070,16 @@
         "kind": 2,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "def gettimesheetFinanciero(proyecto: str):\n    pprint.pprint(f\"Proyecto: {proyecto}\")\n    query = \"\"\"\n            tp.identificador as \"ID\",\n            tp.proyecto as \"Proyecto\",\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",\n            tpe.horas_asignadas * tpe.costo_hora as \"Costo total del empleado\",",
+        "peekOfCode": "def gettimesheetFinanciero(\n    proyecto: Optional[str] = None):\n    query = \"\"\"\n            select\n            tp.identificador as \"ID\",\n            tp.proyecto as \"Proyecto\",\n            tc.nombre as \"Cliente\",\n            a.area as \"Área(s)\",\n            e.name as \"Empleados participantes\",\n            tpe.horas_asignadas as \"Horas del empleado\",",
+        "detail": "pruebafiltros",
+        "documentation": {}
+    },
+    {
+        "label": "getempleadoController",
+        "kind": 2,
+        "importPath": "pruebafiltros",
+        "description": "pruebafiltros",
+        "peekOfCode": "def getempleadoController(\n    empleado: Optional[str] = None\n    ):\n    query = \"\"\"\n            select \n            e.name as \"Empleado\",\n            p.name as \"Supervisor\",\n            s.sede as \"Sede\",\n            pe.nombre as \"Perfil\",\n            string_agg(distinct ce.nombre, ', ' ) as \"Certificaciones\",",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1008,7 +1115,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "app = FastAPI()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}",
+        "peekOfCode": "app = FastAPI()\nDirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.post(\"/\")\ndef read_root():\n    return {\"message\": \"Hi\"}",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1017,7 +1124,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *",
+        "peekOfCode": "DirectoryEmpleados = \"reportsfile/administracion/empleados/\"\n# Validar si la carpeta ya existe\nif not os.path.exists(DirectoryEmpleados):\n    # Si no existe, crear la carpeta\n    os.makedirs(DirectoryEmpleados)\nnow = date.today()\n@app.post(\"/\")\ndef read_root():\n    return {\"message\": \"Hi\"}\n# Registro Timesheet *",
         "detail": "pruebafiltros",
         "documentation": {}
     },
@@ -1026,7 +1133,7 @@
         "kind": 5,
         "importPath": "pruebafiltros",
         "description": "pruebafiltros",
-        "peekOfCode": "now = date.today()\n@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"hola\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,",
+        "peekOfCode": "now = date.today()\n@app.post(\"/\")\ndef read_root():\n    return {\"message\": \"Hi\"}\n# Registro Timesheet *\n@app.post('/registrosTimesheet/', tags=[\"ReportsXls\"])\ndef get_registro_timesheet(\n    area: Optional[str] = None,\n    empleado: Optional[str] = None,\n    fecha_inicio: Optional[str] = None,",
         "detail": "pruebafiltros",
         "documentation": {}
     }

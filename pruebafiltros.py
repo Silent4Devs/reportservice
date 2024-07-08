@@ -27,9 +27,9 @@ if not os.path.exists(DirectoryEmpleados):
 now = date.today()
 
 
-@app.get("/")
+@app.post("/")
 def read_root():
-    return {"message": "hola"}
+    return {"message": "Hi"}
 
 
 # Registro Timesheet *
@@ -352,7 +352,7 @@ def gettimesheetFinanciero(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-# Empleados controller
+## Empleados controller
 @app.post('/empleadosController/', tags=["ReportsXls"])
 def getempleadoController(
     empleado: Optional[str] = None
