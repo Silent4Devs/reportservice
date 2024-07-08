@@ -11,10 +11,10 @@ COPY .env.example .env
 # Copy the requirements file to the working directory
 COPY requirements.txt .
 
-RUN pip install uv 
-RUN uv venv
+# RUN pip install uv 
+# RUN uv venv
 # Install the Python dependencies
-RUN uv pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy the application code to the working directory
 COPY . .
