@@ -10,6 +10,7 @@ from typing import Optional
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 import os
+import json
 
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, Query, HTTPException
@@ -20,12 +21,6 @@ reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
 
-# Validar si la carpeta ya existe
-if not os.path.exists(DirectoryEmpleados):
-    # Si no existe, crear la carpeta
-    os.makedirs(DirectoryEmpleados)
-
-now = date.today()
 
 # Validar si la carpeta ya existe
 if not os.path.exists(DirectoryEmpleados):
@@ -55,8 +50,7 @@ def retrieve_all_item():
             inner join areas a ON e.area_id=a.id
             inner join puestos p ON e.puesto_id =p.id
             where r.deleted_at IS null
-            order by 
-            name asc;
+            order by e.name asc
         """
 
     resultados = ejecutar_consulta_sql(cursor, query)
@@ -191,7 +185,7 @@ def getmoduloEmpleados():
             inner join areas a on e.area_id=a.id
             inner join  puestos p on e.puesto_id =p.id
             where e.deleted_at is null and e.estatus='alta'
-            order by Nombre asc 
+            order by e.name asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
@@ -220,7 +214,7 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "sedes" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     ajustar_columnas(fileRoute)
@@ -285,8 +279,7 @@ def getmacroProcesos():
             g.nombre as "Grupo" ,
             m.descripcion as "Descripción" 
             from macroprocesos m 
-            inner join grupos g on m.id_grupo=g.id 
-            order by m.created_at asc
+            inner join grupos g on m.id_grupo=g.id
             where m.deleted_at is null
             order by m.created_at asc
         """
@@ -363,8 +356,7 @@ def getmoduloActivos():
             sa.subcategoria as "Subcategoría"
             from tipoactivos t 
             inner join subcategoria_activos sa on t.id =sa.categoria_id  
-            order by t.created_at asc 
-            where t.deleted_at is null
+            order by t.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
@@ -394,7 +386,6 @@ def getinventarioActivos():
             inner join activos a on t.id =a.tipoactivo_id 
             inner join empleados e on a.dueno_id=e.id
             left join empleados s on e.supervisor_id=s.id 
-            where t.deleted_at is null ; 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "inventarioActivos" + str(now) + ".xlsx"
@@ -435,9 +426,11 @@ def getglosario():
 @reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
 def getcategoriasCapacitaciones():
     query = """
-            select distinct cc.nombre as "Nombre"
+            select 
+            cc.id as "No.",
+            distinct cc.nombre as "Nombre"
             from recursos r 
-            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id  ;
+            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
@@ -454,32 +447,71 @@ def getcategoriasCapacitaciones():
 @reports.get('/visualizarLogs', tags=["ReportsXls"])
 def getvisualizarLogs():
     query = """
-            select 
-            u.name as "Nombre",
-            a.event as "Evento",
-            a.old_values as "Antiguos valores",
-            a.new_values as "Nuevos valores",
-            a.url as "Url",
-            a.created_at as "Fecha de creación",
-            a.updated_at as "Fecha de actualización"
-            from audits a 
-            inner join users u on a.user_id =u.id 
-            where u.deleted_at is null;
+        select 
+        a.id as "ID",
+        u.name as "User",
+        a.event as "Event",
+        a.old_values as "Old Value",
+        a.new_values as "New Value",
+        a.url as "Url",
+        a.tags as "Tags",
+        a.created_at as "Fecha creación",
+        a.updated_at as "Fecha última actualización"
+        from audits a 
+        inner join users u on a.user_id =u.id 
+        where u.deleted_at is null
+        order by a.created_at desc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No data found for the query")
+    
+    # Verificar el contenido de 'resultados'
+    #print("Resultados de la consulta SQL:", resultados)
+    
+    # Crear el DataFrame y verificar los nombres de las columnas
+    df = pd.DataFrame(resultados)
+    #print("Columnas del DataFrame:", df.columns)
+    
+    def limpiar_json(columna):
+        def extraer_datos(json_str):
+            try:
+                data = json.loads(json_str)
+                result = f"id: {data['id']}, especificaciones: {data['especificaciones']}, cantidad: {data['cantidad']}"
+                return result
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                print(f"Error procesando JSON: {e}")
+                return json_str
+        return columna.apply(extraer_datos)
+    
+    # Verificar si las columnas 'Old Value' y 'New Value' existen en el DataFrame antes de limpiarlas
+    if 'Old Value' in df.columns:
+        df['Old Value'] = limpiar_json(df['Old Value'])
+    else:
+        print("'Old Value' column not found in the data")
+        raise HTTPException(status_code=500, detail="'Old Value' column not found in the data")
+    
+    if 'New Value' in df.columns:
+        df['New Value'] = limpiar_json(df['New Value'])
+    else:
+        print("'New Value' column not found in the data")
+        raise HTTPException(status_code=500, detail="'New Value' column not found in the data")
+    
     fileRoute = DirectoryEmpleados + "visualizarLogs" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
+    df.to_excel(fileRoute, index=False)
+    exportar_a_excel(resultados, fileRoute)
     ajustar_columnas(fileRoute)
     excel_path = Path(fileRoute)
+    
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
+    
     return FileResponse(excel_path)
 
 
 ## Registro Timesheet ## with filter
-@app.post('/registrosTimesheet/', tags=["ReportsXls"])
+@reports.post('/registrosTimesheet/', tags=["ReportsXls"])
 def get_registro_timesheet(
     area: Optional[str] = None,
     empleado: Optional[str] = None,
@@ -536,7 +568,7 @@ def get_registro_timesheet(
         order by t.fecha_dia desc;
     """
 
-    print(query)
+    #print(query)
 
     file_path = "query.txt"
     with open(file_path, "w") as file:
@@ -556,7 +588,7 @@ def get_registro_timesheet(
 
 
 ## Timesheet Áreas  ## with filter
-@app.post("/timesheetAreas/", tags=["ReportsXls"])
+@reports.post("/timesheetAreas/", tags=["ReportsXls"])
 def gettimesheetAreas(
     area: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -580,6 +612,7 @@ def gettimesheetAreas(
             from empleados e 
             inner join puestos p on e.puesto_id =p.id 
             inner join areas a on e.area_id=a.id
+            inner join timesheet t on e.id=t.empleado_id 
         """
     if area:
         query += f" and a.area = '{area}'"
@@ -589,6 +622,10 @@ def gettimesheetAreas(
     query += """
         group by
             a.area,
+            e.name,
+            p.puesto,
+            e.estatus,
+            e.antiguedad,
             t.fecha_dia
     """   
 
@@ -610,7 +647,7 @@ def gettimesheetAreas(
 
 
 ## Timesheet proyectos ## with filter
-@app.post('/timesheetProyectos/', tags=["ReportsXls"])
+@reports.post('/timesheetProyectos/', tags=["ReportsXls"])
 def gettimesheetProyectos(
     area: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -673,7 +710,7 @@ def gettimesheetProyectos(
 
 
 ## Registros Colaboradores Tareas ## with filter 
-@app.post('/colaboradoresTareas/', tags=["ReportsXls"])
+@reports.post('/colaboradoresTareas/', tags=["ReportsXls"])
 def getcolaboradoresTareas(
     empleado: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -752,7 +789,7 @@ def getcolaboradoresTareas(
 
 
 ## Timesheet Financiero ## with filter
-@app.post('/timesheetFinanciero/', tags=["ReportsXls"])
+@reports.post('/timesheetFinanciero/', tags=["ReportsXls"])
 def gettimesheetFinanciero(
     proyecto: Optional[str] = None):
 
@@ -780,7 +817,15 @@ def gettimesheetFinanciero(
 
     query += """
         group by
-            tp.proyecto
+            tp.proyecto,
+            tp.identificador,
+            tc.nombre,
+            a.area,
+            e.name,
+            tpe.horas_asignadas,
+            tpe.costo_hora,
+            tp.estatus,
+            tpe.proyecto_id
     """    
 
     file_path = "query.txt"
@@ -900,7 +945,7 @@ def getevaluaciones360():
     return FileResponse(excel_path)
 
 ## Empleados controller
-@app.post('/empleadosController/', tags=["ReportsXls"])
+@reports.post('/empleadosController/', tags=["ReportsXls"])
 def getempleadoController(
     empleado: Optional[str] = None
     ):

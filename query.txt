@@ -1,18 +1,25 @@
 
-            select 
-            tp.proyecto as "ID-Proyecto",
-            string_agg(distinct a.area, ', ') as "Áreas participantes",
-            string_agg(distinct e.name, ', ') as "Empleados participantes",
-            tc.nombre as "Cliente"
-            from timesheet_proyectos tp 
-            left join timesheet_proyectos_empleados tpe on tp.id=tpe.proyecto_id 
-            left join timesheet_proyectos_areas tpa on tp.id =tpe.proyecto_id 
-            left join areas a on tpe.area_id =a.id  
-            left join empleados e on tpe.empleado_id =e.id 
-            right  join timesheet_clientes tc on tp.cliente_id =tc.id           
-         and a.area = 'Arquitectura'
+        select 
+        a.area as "Áreas",
+        count(tt.tarea) as "Tareas Asignadas del Proyecto" ,
+        sum(
+            coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+            coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+        ) as "Horas invertidas"
+        from timesheet_proyectos tp 
+        inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
+        inner join areas a on tt.area_id=a.id 
+        inner join timesheet_horas th on tt.id =th.tarea_id 
+    
         group by 
             a.area,
-            tp.proyecto, 
-            tc.nombre 
+            tp.proyecto,
+            tp.fecha_inicio, 
+            tp.estatus
+        order by a.area
     
