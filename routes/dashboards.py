@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from config.database import conexion, cursor
 from typing import Optional
 
-#app=FastAPI()
+app=FastAPI()
 dash= APIRouter()
 # Verificar si la conexión es exitosa antes de continuar
 
@@ -377,7 +377,7 @@ if cursor is None:
     raise HTTPException(status_code=500, detail="No se pudo establecer la conexión a la base de datos")
 
 @dash.post('/timesheetProyectosArea', tags=["Dashboards"])
-def timesheet_proyectos_area(cursor,
+def timesheet_proyectos_area(
     estatus: Optional[str] = None,
     proyecto: Optional[str] = None,
     area: Optional[str] = None    

@@ -21,12 +21,6 @@ reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
 
-# Validar si la carpeta ya existe
-if not os.path.exists(DirectoryEmpleados):
-    # Si no existe, crear la carpeta
-    os.makedirs(DirectoryEmpleados)
-
-now = date.today()
 
 # Validar si la carpeta ya existe
 if not os.path.exists(DirectoryEmpleados):
@@ -56,8 +50,7 @@ def retrieve_all_item():
             inner join areas a ON e.area_id=a.id
             inner join puestos p ON e.puesto_id =p.id
             where r.deleted_at IS null
-            order by 
-            name asc;
+            order by e.name asc
         """
 
     resultados = ejecutar_consulta_sql(cursor, query)
@@ -221,7 +214,7 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "sedes-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "sedes" + str(now) + ".xlsx"
     exportar_a_excel(
         resultados, fileRoute)
     ajustar_columnas(fileRoute)
@@ -433,9 +426,11 @@ def getglosario():
 @reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
 def getcategoriasCapacitaciones():
     query = """
-            select distinct cc.nombre as "Nombre"
+            select 
+            cc.id as "No.",
+            distinct cc.nombre as "Nombre"
             from recursos r 
-            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id  ;
+            inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
@@ -473,11 +468,11 @@ def getvisualizarLogs():
         raise HTTPException(status_code=404, detail="No data found for the query")
     
     # Verificar el contenido de 'resultados'
-    print("Resultados de la consulta SQL:", resultados)
+    #print("Resultados de la consulta SQL:", resultados)
     
     # Crear el DataFrame y verificar los nombres de las columnas
     df = pd.DataFrame(resultados)
-    print("Columnas del DataFrame:", df.columns)
+    #print("Columnas del DataFrame:", df.columns)
     
     def limpiar_json(columna):
         def extraer_datos(json_str):
@@ -516,7 +511,7 @@ def getvisualizarLogs():
 
 
 ## Registro Timesheet ## with filter
-@app.post('/registrosTimesheet/', tags=["ReportsXls"])
+@reports.post('/registrosTimesheet/', tags=["ReportsXls"])
 def get_registro_timesheet(
     area: Optional[str] = None,
     empleado: Optional[str] = None,
@@ -573,7 +568,7 @@ def get_registro_timesheet(
         order by t.fecha_dia desc;
     """
 
-    print(query)
+    #print(query)
 
     file_path = "query.txt"
     with open(file_path, "w") as file:
@@ -593,7 +588,7 @@ def get_registro_timesheet(
 
 
 ## Timesheet Áreas  ## with filter
-@app.post("/timesheetAreas/", tags=["ReportsXls"])
+@reports.post("/timesheetAreas/", tags=["ReportsXls"])
 def gettimesheetAreas(
     area: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -617,6 +612,7 @@ def gettimesheetAreas(
             from empleados e 
             inner join puestos p on e.puesto_id =p.id 
             inner join areas a on e.area_id=a.id
+            inner join timesheet t on e.id=t.empleado_id 
         """
     if area:
         query += f" and a.area = '{area}'"
@@ -626,6 +622,10 @@ def gettimesheetAreas(
     query += """
         group by
             a.area,
+            e.name,
+            p.puesto,
+            e.estatus,
+            e.antiguedad,
             t.fecha_dia
     """   
 
@@ -647,7 +647,7 @@ def gettimesheetAreas(
 
 
 ## Timesheet proyectos ## with filter
-@app.post('/timesheetProyectos/', tags=["ReportsXls"])
+@reports.post('/timesheetProyectos/', tags=["ReportsXls"])
 def gettimesheetProyectos(
     area: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -710,7 +710,7 @@ def gettimesheetProyectos(
 
 
 ## Registros Colaboradores Tareas ## with filter 
-@app.post('/colaboradoresTareas/', tags=["ReportsXls"])
+@reports.post('/colaboradoresTareas/', tags=["ReportsXls"])
 def getcolaboradoresTareas(
     empleado: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -789,7 +789,7 @@ def getcolaboradoresTareas(
 
 
 ## Timesheet Financiero ## with filter
-@app.post('/timesheetFinanciero/', tags=["ReportsXls"])
+@reports.post('/timesheetFinanciero/', tags=["ReportsXls"])
 def gettimesheetFinanciero(
     proyecto: Optional[str] = None):
 
@@ -817,7 +817,15 @@ def gettimesheetFinanciero(
 
     query += """
         group by
-            tp.proyecto
+            tp.proyecto,
+            tp.identificador,
+            tc.nombre,
+            a.area,
+            e.name,
+            tpe.horas_asignadas,
+            tpe.costo_hora,
+            tp.estatus,
+            tpe.proyecto_id
     """    
 
     file_path = "query.txt"
@@ -937,7 +945,7 @@ def getevaluaciones360():
     return FileResponse(excel_path)
 
 ## Empleados controller
-@app.post('/empleadosController/', tags=["ReportsXls"])
+@reports.post('/empleadosController/', tags=["ReportsXls"])
 def getempleadoController(
     empleado: Optional[str] = None
     ):
