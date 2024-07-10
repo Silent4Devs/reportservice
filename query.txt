@@ -1,25 +1,32 @@
 
-        select 
-        a.area as "Áreas",
-        count(tt.tarea) as "Tareas Asignadas del Proyecto" ,
+        select
+        to_char(date_trunc('week', t.fecha_dia), 'DD/MM/YYYY') as "Fecha inicio",
+        to_char(t.fecha_dia, 'DD/MM/YYYY') as "Fecha fin",
+        e.name as "Empleado",
+        p.name as "Aprovador",
+        a.area as "Área",
+        t.estatus as "Estatus",
         sum(
-            coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
-            coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
-        ) as "Horas invertidas"
-        from timesheet_proyectos tp 
-        inner join timesheet_tareas tt on tp.id=tt.proyecto_id 
-        inner join areas a on tt.area_id=a.id 
-        inner join timesheet_horas th on tt.id =th.tarea_id 
+        coalesce(cast(nullif(th.horas_lunes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_martes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_miercoles, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_jueves, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_viernes, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_sabado, '') as numeric), 0) +
+        coalesce(cast(nullif(th.horas_domingo, '') as numeric), 0)
+        ) as "Horas de la semana"
+        from timesheet t
+        inner join empleados e ON t.empleado_id = e.id
+        inner join empleados p ON t.aprobador_id = p.id
+        inner join areas a on e.id = a.empleados_id
+        inner join timesheet_horas th on t.id = th.timesheet_id
+        where e.deleted_at is null
     
-        group by 
+        group by
+            t.fecha_dia,
+            e.name,
+            p.name,
             a.area,
-            tp.proyecto,
-            tp.fecha_inicio, 
-            tp.estatus
-        order by a.area
+            t.estatus
+        order by t.fecha_dia desc;
     

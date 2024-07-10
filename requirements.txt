@@ -7,3 +7,8 @@ pandas
 openpyxl
 psycopg2
 plotly
+nltk
+beautifulsoup4
+lxml
+scikit-learn
+spacy

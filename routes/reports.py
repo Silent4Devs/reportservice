@@ -1,7 +1,6 @@
 import pandas as pd
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, FileResponse
-from config.database import cursor
 import pandas as pd
 import psycopg2
 from pathlib import Path
@@ -15,6 +14,7 @@ import json
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, Query, HTTPException
 from datetime import date, datetime
+from config.database import cursor
 
 app = FastAPI()
 reports = APIRouter()
