@@ -11,4 +11,4 @@ nltk
 beautifulsoup4
 lxml
 scikit-learn
-spacy
+keybert
