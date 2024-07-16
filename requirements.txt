@@ -12,5 +12,4 @@ beautifulsoup4
 lxml
 scikit-learn
 keybert
-googletrans
-langdetect
+spacy

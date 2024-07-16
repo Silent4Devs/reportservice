@@ -9,9 +9,6 @@ from keybert import KeyBERT
 from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
-from googletrans import Translator
-from langdetect import detect
-from langdetect.lang_detect_exception import LangDetectException
 
 sentiment=APIRouter()
 
@@ -24,26 +21,34 @@ def clean_html(html_text):
     return text
 
 nltk.download('vader_lexicon')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
 
 class TextData(BaseModel):
     texts: List[str]
     clean: Optional[bool] = False
 
-def translate_text_with_retry(text, src_lang, dest_lang):
-    translator = Translator()
-    max_retries = 3
-    retry_count = 0
+def get_noun_phrases(text):
+    words = nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(words)
+    grammar = """
+        NP: {<DT>?<JJ>*<NN.*>+}   # Determiner + Adjective(s) + Noun(s)
+            {<NN.*>+}             # Noun(s)
+            {<JJ>*<NN.*>+}        # Adjective(s) + Noun(s)
+    """
+    cp = nltk.RegexpParser(grammar)
+    tree = cp.parse(tagged)
     
-    while retry_count < max_retries:
-        try:
-            translation = translator.translate(text, src=src_lang, dest=dest_lang)
-            return translation.text
-        except Exception as e:
-            print(f"Error en la traducción: {e}")
-            retry_count += 1
-            time.sleep(1)  # Espera antes de intentar nuevamente
-    
-    return None 
+    phrases = []
+    for subtree in tree.subtrees():
+        if subtree.label() == 'NP':
+            phrase = ' '.join(word for word, tag in subtree.leaves())
+            phrases.append(phrase)
+    return phrases
+
+
 
 ### API Análisis de sentimientos
 @sentiment.post('/sentimentAnalysis/', tags=["SentimentAnalysis"])
@@ -65,22 +70,7 @@ def sentiment_analysis(data: TextData):
         #print(f"Texto procesado: {texto}")
         resultados_vader = sid.polarity_scores(texto)
 
-        try:
-            idioma = detect(texto)
-            print(f"Idioma detectado: {idioma}")
-
-            # Traducir al inglés si no está en inglés
-            if idioma != 'en':
-                traducido = translator.translate(texto, src=idioma, dest='en').text
-            else:
-                traducido = texto
-        except LangDetectException as e:
-            print(f"Error al detectar idioma: {e}")
-            traducido = texto
-
-        print(f"Texto traducido: {traducido}")
-
-        # Análisis de subjetividad (0 a 1) y polaridad (-1 a 1) con TextBlob
+        # Análisis de subjetividad (0 a 1) y polaridad (0 a 1) con TextBlob
         blob = TextBlob(texto)
         resultados_textblob = {
             "polarity": blob.sentiment.polarity,
@@ -91,7 +81,7 @@ def sentiment_analysis(data: TextData):
         # Un valor más cercano a 0 indica que el texto es objetivo, 
         # es decir, presenta hechos y datos.
 
-        frases_nominales = list(blob.noun_phrases)
+        frases_nominales = get_noun_phrases(texto)
         #print(f"Frases nominales: {frases_nominales}")
 
         p_clave = kw_model.extract_keywords(texto, keyphrase_ngram_range=(1, 2), stop_words='english', top_n=5)
@@ -137,33 +127,6 @@ def sentiment_analysis(data: TextData):
 # f1 = f1_score(true_labels, predicted_labels)
 # print(f'F1-Score: {f1}')
 
-from googletrans import Translator, LANGUAGES
-import time
-
-translator = Translator()
-
-def translate_text_with_retry(text, src_lang, dest_lang):
-    max_retries = 3
-    retry_count = 0
-    
-    while retry_count < max_retries:
-        try:
-            translation = translator.translate(text, src=src_lang, dest=dest_lang)
-            return translation.text
-        except Exception as e:
-            print(f"Error en la traducción: {e}")
-            retry_count += 1
-            time.sleep(1)  # Espera antes de intentar nuevamente
-    
-    return None  # Manejo de error más robusto según tus necesidades
-
-# Ejemplo de uso
-texto = "Hola, cómo estás?"
-traducido = translate_text_with_retry(texto, src='es', dest='en')
-if traducido:
-    print(f"Texto traducido: {traducido}")
-else:
-    print("No se pudo traducir el texto.")
 
 
 # Ejemplo de uso
