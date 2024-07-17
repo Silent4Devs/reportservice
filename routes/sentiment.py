@@ -9,8 +9,11 @@ from keybert import KeyBERT
 from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
+import spacy
+
 
 sentiment=APIRouter()
+
 
 #### Def de limpieza de textos
 def clean_html(html_text):
@@ -26,6 +29,7 @@ nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
 
+nlp = spacy.load('en_core_web_lg')
 class TextData(BaseModel):
     texts: List[str]
     clean: Optional[bool] = False
@@ -48,6 +52,10 @@ def get_noun_phrases(text):
             phrases.append(phrase)
     return phrases
 
+def get_noun_phrases_spacy(text):
+    doc = nlp(text)
+    phrases = [chunk.text for chunk in doc.noun_chunks]
+    return phrases
 
 
 ### API Análisis de sentimientos
@@ -59,7 +67,8 @@ def sentiment_analysis(data: TextData):
     resultados = {
         "analisis_de_sentimientos": [],
         "sentimientos_textblob": [],
-        "frases_nominales": [],
+        #"frases_nominales": [],
+        "frases_nominales_spacy": [],
         "palabras_clave": []
         #"texto_tokenizado": []
     }
@@ -81,7 +90,8 @@ def sentiment_analysis(data: TextData):
         # Un valor más cercano a 0 indica que el texto es objetivo, 
         # es decir, presenta hechos y datos.
 
-        frases_nominales = get_noun_phrases(texto)
+        #frases_nominales = get_noun_phrases(texto)
+        frases_nominales_spacy = get_noun_phrases_spacy(texto)
         #print(f"Frases nominales: {frases_nominales}")
 
         p_clave = kw_model.extract_keywords(texto, keyphrase_ngram_range=(1, 2), stop_words='english', top_n=5)
@@ -92,10 +102,16 @@ def sentiment_analysis(data: TextData):
 
         resultados["analisis_de_sentimientos"].append(resultados_vader)
         resultados["sentimientos_textblob"].append(resultados_textblob)
-        resultados["frases_nominales"].append(frases_nominales)
+        #resultados["frases_nominales"].append(frases_nominales)
+        resultados["frases_nominales_spacy"].append(frases_nominales_spacy)
         resultados["palabras_clave"].append(palabras_clave)
         #resultados["texto_tokenizado"].append(texto_tokenizado)
     return resultados
+
+#### Para probar:
+#### {
+#     "texts": ["En sesión presencial con el coordinador para revisar el correcto funcionamiento de su módulo y con ello liberar el módulo, salen nuevamente errores y se identifican correcciones solicitadas con anterioridad que no fueron aplicadas por el equipo de desarrollo. Es importante comentar que la parte de desarrollo la tenemos con el proveedor Evoluta; sin embargo por parte de Silent tenemos la tarea de validar el correcto funcionamiento en conjunto con el proveedor previo a la sesión con el cliente."]
+# }
 
 
     # resultados_json = json.dumps(resultados, indent=5)
