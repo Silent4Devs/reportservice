@@ -3,7 +3,7 @@ import pandas as pd
 import psycopg2
 from fastapi import HTTPException, FastAPI
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from config.database import conexion, cursor
 from typing import Optional
 
@@ -74,10 +74,11 @@ def registros_timesheet_estatus(
         bargap=0.15,
         bargroupgap=0.1
     )
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
-    
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 
 ################################################ (Estatus Todas las Areas Dona)
@@ -122,9 +123,11 @@ def registros_timesheet_status_dona(
         title='Registros de Timesheet por Estatus',
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ################################################ (Barras Vertical)
 
@@ -189,10 +192,11 @@ def registros_timesheet_area(
         bargap=0.15
     )
     
-    # Mostrar la gráfica
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 
 ############## Registros Timesheet Empleados ############## (Barras Horizontales)
@@ -261,10 +265,11 @@ def registros_tsempleados_estatus(
         bargroupgap=0.1
     )
     
-    # Mostrar la gráfica
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ###################################################### (Sin filtro , no lleva/Registros Timesheet por Área Dona)
 
@@ -310,9 +315,11 @@ def registros_timesheetArea_dona():
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ################################################# (Dona ultimo mes)
 
@@ -368,9 +375,11 @@ def registros_timesheetMes_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ####################  Timesheet Proyectos ####################### (Proyecto Areas Horizontal)
 if cursor is None:
@@ -450,9 +459,12 @@ def timesheet_proyectos_area(
         bargap=0.15,
         bargroupgap=0.1
     )
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 
 ############################ (Horas Invertidas en el Proyecto por Área Dona)
@@ -519,9 +531,11 @@ def timesheet_horas_area_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ################ (Tareas en el Proyecto por Área Dona)
 if cursor is None:
@@ -582,9 +596,11 @@ def timesheet_horas_area_dona(
         annotations=[dict(text=' ', x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
 
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ###################### Horas trabajadas en proyecto por empleado (Barras verticales) 
 if cursor is None:
@@ -655,9 +671,11 @@ def timesheet_horasarea_emp(
         bargap=0.15
     )
     
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
 
 ##################### Dashboard Timesheet Financiero #############################3
 if cursor is None:
@@ -732,6 +750,8 @@ def timesheet_horasarea_emp(
         bargap=0.15
     )
     
-    graph_json = fig.to_json()
-    
-    return JSONResponse(content=graph_json)
+    graph_html = fig.to_html(full_html=False)
+
+    return HTMLResponse(content=graph_html)
+
+app.include_router(dash)
