@@ -10,15 +10,17 @@ from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
 import spacy
-from gensim.summarization.summarizer import summarize as gensim_summarize
-from transformers import DistilBertTokenizer, DistilBertModel
+import gensim
+from gensim import *
+from transformers import pipeline
 import torch
 
 
 sentiment=APIRouter()
 
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-model = DistilBertModel.from_pretrained('distilbert-base-uncased')
+#tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+#model = DistilBertModel.from_pretrained('distilbert-base-uncased')
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 #### Def de limpieza de textos
 def clean_html(html_text):
@@ -62,32 +64,15 @@ def get_noun_phrases_spacy(text):
     phrases = [chunk.text for chunk in doc.noun_chunks]
     return phrases
 
-def gensim_summary(text, ratio=0.2):
-    try:
-        return gensim_summarize(text, ratio=ratio)
-    except:
-        return "El texto es demasiado corto para generar un resumen."
+def bart_summary(text, max_length=100):
+    # Asegúrate de que el texto no sea demasiado corto para el modelo de resumen
+    if len(text) < 50:
+        return text
 
-def distilbert_summary(text, max_length=100):
-    inputs = tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    
-    # Usar la salida del último hidden state
-    last_hidden_state = outputs.last_hidden_state
-    
-    # Calcular la importancia de cada token
-    importance = torch.sum(last_hidden_state, dim=-1)
-    
-    # Obtener los índices de los tokens más importantes
-    _, indices = torch.topk(importance[0], k=max_length)
-    indices = torch.sort(indices)[0]
-    
-    # Reconstruir el resumen
-    summary_tokens = [inputs.input_ids[0][i] for i in indices]
-    summary = tokenizer.decode(summary_tokens)
-    
-    return summary
+    # Ajuste de los parámetros del resumen
+    summary = summarizer(text, max_length=max_length, min_length=30, do_sample=False)
+    return summary[0]['summary_text']
+
 
 ### API Análisis de sentimientos
 @sentiment.post('/sentimentAnalysis/', tags=["SentimentAnalysis"])
@@ -98,12 +83,9 @@ def sentiment_analysis(data: TextData):
     resultados = {
         "analisis_de_sentimientos": [],
         "sentimientos_textblob": [],
-        #"frases_nominales": [],
         "frases_nominales_spacy": [],
         "palabras_clave": [],
-        #"texto_tokenizado": []
-        "resumen_gensim": [],
-        "resumen_distilbert": []
+        "resumen_bart": []
     }
 
     for texto in data.texts:
@@ -123,9 +105,7 @@ def sentiment_analysis(data: TextData):
         # Un valor más cercano a 0 indica que el texto es objetivo, 
         # es decir, presenta hechos y datos.
 
-        #frases_nominales = get_noun_phrases(texto)
         frases_nominales_spacy = get_noun_phrases_spacy(texto)
-        #print(f"Frases nominales: {frases_nominales}")
 
         p_clave = kw_model.extract_keywords(texto, keyphrase_ngram_range=(1, 2), stop_words='english', top_n=5)
         palabras_clave = [keyword for keyword, score in p_clave]
@@ -133,18 +113,15 @@ def sentiment_analysis(data: TextData):
 
         texto_tokenizado = WordPunctTokenizer().tokenize(texto)
 
-        resumen_gensim = gensim_summary(texto)
-        resumen_distilbert = distilbert_summary(texto)
+        resumen_bart = bart_summary(texto)
 
 
         resultados["analisis_de_sentimientos"].append(resultados_vader)
         resultados["sentimientos_textblob"].append(resultados_textblob)
-        #resultados["frases_nominales"].append(frases_nominales)
         resultados["frases_nominales_spacy"].append(frases_nominales_spacy)
         resultados["palabras_clave"].append(palabras_clave)
         #resultados["texto_tokenizado"].append(texto_tokenizado)
-        resultados["resumen_gensim"].append(resumen_gensim)
-        resultados["resumen_distilbert"].append(resumen_distilbert)
+        resultados["resumen_bart"].append(resumen_bart)
     return resultados
 
 #### Para probar:
