@@ -995,6 +995,37 @@ def getempleadoController(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+
+###Roles Empleados
+@reports.get('/rolesEmpleados', tags=["ReportsXls"])
+def getrolesEmpleados():
+    query = """
+            select 
+            e.id as "ID",
+            e.name as "Nombre", 
+            string_agg(distinct r.title , ', ' ) as "Roles"
+            from roles r 
+            inner join role_user ru on ru.role_id =r.id 
+            inner join users u on u.id =ru.user_id 
+            inner join empleados e on e.id =u.empleado_id 
+            where e.estatus='alta'
+            group by e.id
+            order by e.name asc;  
+        """
+    resultados = ejecutar_consulta_sql(cursor, query)
+    fileRoute = DirectoryEmpleados + "rolesEmpleados" + str(now) + ".xlsx"
+    exportar_a_excel(
+        resultados, fileRoute)
+    ajustar_columnas(fileRoute)
+    excel_path = Path(fileRoute)
+    if not excel_path.is_file():
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(excel_path)
+
+
+
+
 ########
 
 
