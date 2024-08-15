@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, Query, HTTPException
 from datetime import date, datetime
 from config.database import cursor
+from fpdf import FPDF
+import textwrap
 
 app = FastAPI()
 reports = APIRouter()
@@ -34,35 +36,44 @@ def getEmpleados():
     return {"message": "empleados"}
 
 # Users #############
-@reports.get('/Users', tags=["ReportsXls"])
-def retrieve_all_item():
+@reports.get('/usuarios', tags=["ReportsXls"])
+def getUsuarios():
     query = """
-            select  
+	        select  
             e.name as "Nombre", 
             e.email as "Correo Electrónico", 
-            r.title as "Roles",
+            string_agg(distinct r.title, ', ' ) as "Roles",
             e.name as "Empleado Vinculado",
             a.area as "Área", 
-            p.puesto as "Puesto"
+            string_agg(distinct p.puesto, ', ' ) as "Puesto"
             from empleados e  
             inner join role_user ru on e.id=ru.user_id 
             inner join roles r on ru.role_id =r.id
             inner join areas a ON e.area_id=a.id
             inner join puestos p ON e.puesto_id =p.id
             where r.deleted_at IS null
+            group  by e.name, e.email, a.area
             order by e.name asc
         """
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "users" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+
+    excel_file_route = DirectoryEmpleados + "usuarios" + str(now) + ".xlsx"
+    exportar_a_excel(resultados, excel_file_route)
+    ajustar_columnas(excel_file_route)
+    excel_path = Path(excel_file_route)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
-    return FileResponse(excel_path)
+        raise HTTPException(status_code=404, detail="file not found on the server")
+
+    # Generar el reporte en PDF
+    pdf_file_route = DirectoryEmpleados + "usuarios" + str(now) + ".pdf"
+    exportar_a_pdf(resultados, pdf_file_route)    
+
+
+    return {
+        "excel_file": FileResponse(excel_path),
+        "pdf_file": FileResponse(pdf_file_route)
+    }
 
 
 # Empleados Puestos
@@ -1045,3 +1056,35 @@ def ajustar_columnas(nombre_archivo):
         print("No se pudieron ajustar las columnas debido a un error." + str(e))
         raise HTTPException(
             status_code=500, detail="Column adjust error: " + str(e))
+    
+def exportar_a_pdf(resultados, nombre_archivo):
+    try:
+        if resultados is not None:
+            pdf = FPDF()
+            pdf = FPDF(orientation='L', unit='mm', format='A4')
+            pdf.add_page()
+            pdf.set_font("Times", size=10)
+
+            # Agregar encabezado
+            pdf.cell(200, 10, txt="Reporte de Usuarios", ln=1, align="C")
+
+            # Función para ajustar el texto
+            def ajustar_texto(texto, ancho_celda):
+                # Ajustar el texto para que no exceda el ancho de la celda
+                return textwrap.fill(texto, width=ancho_celda // 5)  # Ajusta el ancho según sea necesario
+
+            # Agregar datos de la tabla
+            for row in resultados:
+                pdf.cell(40, 10, ajustar_texto(str(row[0]), 80), border=1,align='L')
+                pdf.cell(40, 10, ajustar_texto(str(row[1]), 80), border=1,align='L')
+                pdf.cell(40, 10, ajustar_texto(str(row[2]), 40), border=1,align='L')
+                pdf.cell(40, 10, ajustar_texto(str(row[3]), 40), border=1,align='L')
+                pdf.cell(40, 10, ajustar_texto(str(row[4]), 40), border=1,align='L')
+                pdf.cell(40, 10, ajustar_texto(str(row[5]), 40), border=1,align='L')
+                pdf.ln(10)
+
+            pdf.output(nombre_archivo)
+            print("Resultados exportados a", nombre_archivo)
+    except Exception as e:
+        print("No se pudieron exportar los resultados a PDF debido a un error." + str(e))
+        raise HTTPException(status_code=500, detail="Report error: " + str(e))
