@@ -1060,28 +1060,95 @@ def ajustar_columnas(nombre_archivo):
 def exportar_a_pdf(resultados, nombre_archivo):
     try:
         if resultados is not None:
-            pdf = FPDF()
+            #pdf = FPDF()
             pdf = FPDF(orientation='L', unit='mm', format='A4')
             pdf.add_page()
             pdf.set_font("Times", size=10)
 
             # Agregar encabezado
-            pdf.cell(200, 10, txt="Reporte de Usuarios", ln=1, align="C")
+            pdf.cell(0, 10, txt="Reporte de Usuarios", ln=1, align="C")
 
             # Función para ajustar el texto
-            def ajustar_texto(texto, ancho_celda):
-                # Ajustar el texto para que no exceda el ancho de la celda
-                return textwrap.fill(texto, width=ancho_celda // 5)  # Ajusta el ancho según sea necesario
+            # def ajustar_texto(resultados, ancho_celda):
+            #     # Ajustar el texto para que no exceda el ancho de la celda
+            #     return textwrap.fill(resultados, width=ancho_celda // 5)  # Ajusta el ancho según sea necesario
+
+            # Establecer color de fondo
+            pdf.set_fill_color(255, 255, 255) #Todo 255 para blanco
 
             # Agregar datos de la tabla
+            # for row in resultados:
+            #     pdf.cell(45, 10, ajustar_texto(str(row[0]), 80), border=1,align='L')
+            #     pdf.cell(45, 10, ajustar_texto(str(row[1]), 80), border=1,align='L')
+            #     pdf.cell(45, 10, ajustar_texto(str(row[2]), 40), border=1,align='L')
+            #     pdf.cell(45, 10, ajustar_texto(str(row[3]), 40), border=1,align='L')
+            #     pdf.cell(45, 10, ajustar_texto(str(row[4]), 40), border=1,align='L')
+            #     pdf.cell(0, 10, ajustar_texto(str(row[5]), 40), border=1,align='L')
+            #     pdf.ln(10)
+
+            # for row in resultados:
+            #     # Guardar la posición inicial
+            #     x_inicio = pdf.get_x()
+            #     y_inicio = pdf.get_y()
+                
+            #     # Primera columna
+            #     pdf.multi_cell(40, 10, str(row[0]), border=1, align='L', fill=True)
+                
+            #     # Guardar la posición actual (donde termina la primera columna)
+            #     x_fin = pdf.get_x()
+            #     y_fin = pdf.get_y()
+
+            #     # Volver a la posición inicial, pero moviendo a la derecha
+            #     pdf.set_xy(x_inicio + 40, y_inicio)
+
+            #     # Segunda columna
+            #     pdf.multi_cell(40, 10, str(row[1]), border=1, align='L', fill=True)
+
+            #     # Repetir el proceso para las demás columnas
+            #     pdf.set_xy(x_inicio + 80, y_inicio)
+            #     pdf.multi_cell(40, 10, str(row[2]), border=1, align='L', fill=True)
+
+            #     pdf.set_xy(x_inicio + 120, y_inicio)
+            #     pdf.multi_cell(40, 10, str(row[3]), border=1, align='L', fill=True)
+
+            #     pdf.set_xy(x_inicio + 160, y_inicio)
+            #     pdf.multi_cell(40, 10, str(row[4]), border=1, align='L', fill=True)
+
+            #     pdf.set_xy(x_inicio + 200, y_inicio)
+            #     pdf.multi_cell(40, 10, str(row[5]), border=1, align='L', fill=True)
+
+            #     # Ahora mover el cursor verticalmente a la siguiente fila
+            #     pdf.set_xy(x_fin, y_fin)  # Establecer la posición en la siguiente fila
+
+            ancho_columna = 40
+            alto_fila = 10  # Altura base de la fila
+            margen_inferior = 10
+
             for row in resultados:
-                pdf.cell(40, 10, ajustar_texto(str(row[0]), 80), border=1,align='L')
-                pdf.cell(40, 10, ajustar_texto(str(row[1]), 80), border=1,align='L')
-                pdf.cell(40, 10, ajustar_texto(str(row[2]), 40), border=1,align='L')
-                pdf.cell(40, 10, ajustar_texto(str(row[3]), 40), border=1,align='L')
-                pdf.cell(40, 10, ajustar_texto(str(row[4]), 40), border=1,align='L')
-                pdf.cell(40, 10, ajustar_texto(str(row[5]), 40), border=1,align='L')
-                pdf.ln(10)
+                # Guardar la posición inicial
+                x_inicio = pdf.get_x()
+                y_inicio = pdf.get_y()
+                
+                altura_maxima = 0
+                for i in range(6):
+                    texto = str(row[i])
+                    num_lineas = len(pdf.multi_cell(ancho_columna, alto_fila, texto, border=0, align='L', fill=False, split_only=True))
+                    altura_celda = num_lineas * alto_fila
+                    if altura_celda > altura_maxima:
+                        altura_maxima = altura_celda
+
+                # Verificar si hay espacio suficiente en la página actual
+                if y_inicio + altura_maxima > pdf.h - margen_inferior:
+                    pdf.add_page()  # Añadir nueva página
+                    y_inicio = pdf.get_y() 
+
+                for i in range(6):
+                    pdf.set_xy(x_inicio + i * ancho_columna, y_inicio)
+                    texto = str(row[i])
+                    pdf.multi_cell(ancho_columna, alto_fila, texto, border=('L', 'T', 'R'), align='L', fill=True)
+                         
+                # Mover el cursor a la siguiente fila
+                pdf.set_xy(x_inicio, y_inicio + altura_maxima)
 
             pdf.output(nombre_archivo)
             print("Resultados exportados a", nombre_archivo)
