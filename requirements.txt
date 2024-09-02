@@ -5,7 +5,7 @@ sqlalchemy
 psycopg2-binary
 pandas
 openpyxl
-psycopg2
+psycopg2-binary
 plotly
 nltk
 beautifulsoup4
@@ -14,3 +14,5 @@ scikit-learn
 keybert
 spacy 
 gensim
+fpdf
+texblob
