@@ -18,10 +18,13 @@ from config.database import cursor
 from fpdf import FPDF
 import textwrap
 
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 from reportlab.lib import colors
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph
 from reportlab.lib.units import inch
@@ -30,6 +33,9 @@ app = FastAPI()
 reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
+
+pdfmetrics.registerFont(TTFont('Roboto', 'fonts/Roboto/Roboto-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('Roboto-Bold', 'fonts/Roboto/Roboto-Bold.ttf'))
 
 
 # Validar si la carpeta ya existe
@@ -1755,24 +1761,6 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
     doc = SimpleDocTemplate(nombre_archivo, pagesize=pagesize)
     elementos = []
 
-    # Definir estilos
-    
-    estiloTitulo = ParagraphStyle(
-        name='RobotoBold',
-        fontName='Roboto',
-        fontSize=18,
-        textColor= HexColor("#2E2E2E"),
-        alignment=1  # Centrar el texto
-    )
-
-    estilo_encabezado = ParagraphStyle(
-        name='RobotoEncabezado',
-        fontName='Roboto',
-        fontSize=11,
-        textColor= HexColor("#575757"),
-        alignment= 0 # Centrar el texto
-    )
-
     estilo_normal = ParagraphStyle(
         name='Roboto',
         fontName='Roboto',
@@ -1787,6 +1775,7 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
         for fila in datos
     ]
 
+
     tabla = Table(datos_tabla, repeatRows=1)
 
     color_encabezado = HexColor("#D8F2FF") #Azul medio
@@ -1800,13 +1789,13 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
         ('BACKGROUND', (0, 0), (-1, 0), color_encabezado),
         ('TEXTCOLOR', (0, 0), (-1, 0), color_texto_encabezado),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), estilo_encabezado),
+        ('FONTNAME', (0, 0), (-1, 0), 'Roboto-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 11),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, i), (-1, i), bg_color), ####Falta colores en tabla
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 1), (-1, -1), estilo_normal),
+        ('FONTNAME', (0, 1), (-1, -1), 'Roboto'),
         ('FONTSIZE', (0, 1), (-1, -1), 12),
         ('TOPPADDING', (0, 1), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
@@ -1815,9 +1804,9 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
     ])
 
         # Alternar colores en las filas
-    for i in range(1, len(datos_tabla)):
+    for i, fila in enumerate(datos_tabla[1:], start=1):
         bg_color = color_fila_par if i % 2 == 0 else color_fila_impar
-        #estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
+        estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
 
     tabla.setStyle(estilo_tabla)
 
@@ -1831,3 +1820,4 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
 
     # Generar el PDF
     doc.build(elementos)
+
