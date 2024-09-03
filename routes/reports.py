@@ -1,10 +1,8 @@
 import pandas as pd
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, FileResponse
-import pandas as pd
 import psycopg2
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException
 from typing import Optional
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
