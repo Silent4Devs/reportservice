@@ -90,7 +90,7 @@ def getUsuariosPDF():
 
     # Devolver el archivo para descarga
     return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
-
+'LEFT'
 @reports.get('/usuarios', tags=["ReportsXls"])
 def getUsuariosExcel():
     resultados = getUsuarios()
@@ -1762,9 +1762,9 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
     estilo_normal = ParagraphStyle(
         name='Roboto',
         fontName='Roboto',
-        fontSize=12,
+        fontSize=11,
         textColor= HexColor("#2E2E2E"),
-        alignment=1  # Centrar el texto
+        alignment=0  # Centrar el texto
     )
 
     # Preparar los datos de la tabla
@@ -1777,31 +1777,32 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
     tabla = Table(datos_tabla, repeatRows=1)
 
     color_encabezado = HexColor("#D8F2FF") #Azul medio
-    color_fila_par = HexColor("#E9E9E9")  # Azul claro
+    color_fila_par = HexColor("#E9E9E9")  # Gris claro
     color_fila_impar =  HexColor("#FFFFFF")    #Blanco
     color_texto_encabezado = HexColor("#575757")  #Gris medio
-
+    color_borde = HexColor('#CCCCCC')
 
     # Estilo de la tabla
     estilo_tabla = TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), color_encabezado),
         ('TEXTCOLOR', (0, 0), (-1, 0), color_texto_encabezado),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Roboto-Bold'),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Roboto'),
         ('FONTSIZE', (0, 0), (-1, 0), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, i), (-1, i), bg_color), ####Falta colores en tabla
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 11),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 1), (-1, -1), 'Roboto'),
         ('FONTSIZE', (0, 1), (-1, -1), 12),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('TOPPADDING', (0, 1), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 11),
+        ('GRID', (0, 0), (-1, -1), 1, color_borde),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LINEBEFORE', (0, 0), (-1,0), 0, '#D8F2FF'),
+        ('LINEAFTER', (0, 0), (-1,0), 0, '#D8F2FF')
     ])
 
-        # Alternar colores en las filas
+        # Alternar colores en las filass
     for i, fila in enumerate(datos_tabla[1:], start=1):
         bg_color = color_fila_par if i % 2 == 0 else color_fila_impar
         estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
