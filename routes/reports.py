@@ -22,10 +22,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.lib import colors
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph
 from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
 
 app = FastAPI()
 reports = APIRouter()
@@ -48,6 +49,7 @@ def getEmpleados():
     return {"message": "empleados"}
 
 # Users #       #
+tituloModulo = "Reporte de Usuarios"
 def getUsuarios():
     query = """
 	        select  
@@ -78,9 +80,10 @@ def getUsuariosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Nombre", "Correo \nElectrónico", "Roles", "Empleado  \nVinculado", "Área", "Puesto"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -90,7 +93,8 @@ def getUsuariosPDF():
 
     # Devolver el archivo para descarga
     return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
-'LEFT'
+
+
 @reports.get('/usuarios', tags=["ReportsXls"])
 def getUsuariosExcel():
     resultados = getUsuarios()
@@ -108,6 +112,7 @@ def getUsuariosExcel():
     return FileResponse(excel_path, filename=f"usuarios_{now}.xlsx", media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 # Empleados Puestos  #
+tituloModulo = "Reporte de Ompleados-Puestos"
 def getEmpleadosPuestos():
     query = """
             select 
@@ -149,9 +154,10 @@ def getEmpleadosPdf():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Empleado", "Supervisor", "Área", "Puesto"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -164,7 +170,7 @@ def getEmpleadosPdf():
 
     
 ## Puestos  #
-
+tituloModulo = "Reporte Módulo Puestos"
 def getPuestos():
     query = """
             select 
@@ -203,9 +209,10 @@ def getEmpleadosPuestosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Puesto", "Área", "Descripción"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -218,6 +225,7 @@ def getEmpleadosPuestosPDF():
 
     
 ## Roles  #
+tituloModulo = "Reporte Módulo Roles"
 def getRoles():
     query = """
             select 
@@ -254,9 +262,10 @@ def getModuloRolesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "CNombre \ndel Rol"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -269,6 +278,7 @@ def getModuloRolesPDF():
 
 
 ## Soporte #
+tituloModulo = "Reporte Módulo Soporte"
 def getSoporte():
     query = """
             select 
@@ -308,9 +318,10 @@ def getSoportePDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Rol", "Nombre", "Puesto", "Teléfono", "Extensión", "Tel.Celular", "Correo"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -323,6 +334,7 @@ def getSoportePDF():
 
     
 ## Modulo Empleados  #
+tituloModulo = "Reporte Módulo Empleados"
 def getModuloEmpleados():
     query = """
             select 
@@ -368,9 +380,10 @@ def getModEmpleadosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["No.Empleado", "Nombre", "Email", "Teléfono", "Área", "Puesto", "Supervisor", "Antigüedad", "Estatus"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -383,6 +396,7 @@ def getModEmpleadosPDF():
 
 
 ##  Sedes  #
+tituloModulo = "Reporte Módulo Sedes"
 def getModuloSedes():
     query = """
             select 
@@ -421,9 +435,9 @@ def getSedesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Sede", "Dirección", "Descripción", "Empresa"]
-
+    tam_celdas =[1.5 * inch ]
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -436,6 +450,7 @@ def getSedesPDF():
 
 
 ## Niveles Jerarquicos  #
+tituloModulo = "Reporte Módulo Niveles Jerarquicos"
 def getNivelesJerarquicos():
     query = """
             select 
@@ -471,9 +486,10 @@ def getNivelesJerarquicosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Nivel", "Descripción"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -486,6 +502,7 @@ def getNivelesJerarquicosPDF():
 
 
 ## Registro de Áreas  #
+tituloModulo = "Reporte Módulo Registro Áreas"
 def getRegistroAreas():
     query = """
             select 
@@ -525,9 +542,9 @@ def getRegAreasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Nombre \nde área", "Grupo", "Reportar a", "Descripción"]
-
+    tam_celdas =[1.5 * inch ]
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -540,7 +557,8 @@ def getRegAreasPDF():
 
 
 ## Macroprocesos  #
-def getMacroProcesos():
+tituloModulo = "Reporte Módulo Macroprocesos"
+def getMacroprocesos():
     query = """
             select 
             m.codigo as "Código",
@@ -557,7 +575,7 @@ def getMacroProcesos():
 
 @reports.get('/macroProcesos', tags=["ReportsXls"])
 def getMacroProcesosExcel():
-    resultados = getMacroProcesos()
+    resultados = getMacroprocesos()
     fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
     try:
         exportar_a_excel(resultados, fileRoute)
@@ -572,15 +590,16 @@ def getMacroProcesosExcel():
 
 @reports.get('/macroProcesos/pdf', tags=["ReportsPDF"])
 def getMacroProcesosPDF():
-    resultados = getMacroProcesos()
+    resultados = getMacroprocesos()
 
     pdf_filename = f"macroProcesos_{now}.pdf"
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Código", "Nombre", "Grupo", "Descripción"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -594,6 +613,7 @@ def getMacroProcesosPDF():
 
 
 ## Procesos  #
+tituloModulo = "Reporte Módulo Procesos"
 def getModuloProcesos():
     query = """
             select 
@@ -632,9 +652,10 @@ def getModuloProcesosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Código", "Nombre del \nproceso", "Macroproceso", "Descripción"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -647,6 +668,7 @@ def getModuloProcesosPDF():
 
 
 ## Modulo Tipo Activos #
+tituloModulo = "Reporte Módulo Tipo Activos"
 def getModuloTipoActivos():
     query = """
             select 
@@ -682,9 +704,10 @@ def getModuloTipoActivosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Categoría"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -697,6 +720,7 @@ def getModuloTipoActivosPDF():
 
 
 ## Modulo Activos  #
+tituloModulo = "Reporte Módulo Activos"
 def getModuloActivos():
     query = """
             select 
@@ -733,9 +757,10 @@ def getModuloActivosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Caregoría", "Subcategoría"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -748,6 +773,7 @@ def getModuloActivosPDF():
 
 
 ## Inventario de Activos  #
+tituloModulo = "Reporte Módulo Inventario Activos"
 def getInventarioActivos():
     query = """
             select 
@@ -790,9 +816,10 @@ def getInventarioActivosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Nombre \del activo", "Categoría", "Subcategoría", "Descripción", "Dueño", "Responsable"]
-
+    tam_celdas =[1.5 * inch ]
+    
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -805,6 +832,7 @@ def getInventarioActivosPDF():
 
     
 ## Glosario  #
+tituloModulo = "Reporte Módulo Glosario"
 def getGlosario():
     query = """
             select 
@@ -842,9 +870,10 @@ def getGlosarioPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Inciso", "Concepto", "Módulo", "Definición", "Explicación"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -857,6 +886,7 @@ def getGlosarioPDF():
 
 
 ## Categorias capacitaciones  #
+tituloModulo = "Reporte Módulo Categoria Capacitaciones"
 def getCategoriasCapacitaciones():
     query = """
             select 
@@ -891,8 +921,10 @@ def getCategoriasCapacitacionesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["No.", "Nombre"]
+    tam_celdas =[1.5 * inch ]
+
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -905,6 +937,7 @@ def getCategoriasCapacitacionesPDF():
 
 
 ## Logs  ## FALTA ##################
+tituloModulo = "Reporte Módulo Visualizar Logs"
 @reports.get('/visualizarLogs', tags=["ReportsXls"])
 def getvisualizarLogs():
     query = """
@@ -969,6 +1002,7 @@ def getvisualizarLogs():
 
 
 ## Registro Timesheet           #
+tituloModulo = "Reporte Módulo Registro Timesheet"
 def getRegistroTimesheet(
     area: Optional[str] = None,
     empleado: Optional[str] = None,
@@ -1057,9 +1091,10 @@ def getRegistrosTimesheetPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Aprovador", "Área", "Estatus", "Horas de \nla semana"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1072,6 +1107,7 @@ def getRegistrosTimesheetPDF():
 
 
 ## Timesheet Áreas  #
+tituloModulo = "Reporte Módulo Timesheet Áreas"
 def getTimesheetAreas(
     area: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -1142,9 +1178,10 @@ def getTimesheetAreasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Nombre", "Puesto","Área","Estatus", "Fecha"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1158,6 +1195,7 @@ def getTimesheetAreasPDF():
 
 
 ## Timesheet proyectos  #
+tituloModulo = "Reporte Módulo Timesheet Proyectos"
 def getTimesheetProyectos(
     area: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -1233,9 +1271,10 @@ def getTimesheetProyectosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID-Proyecto", "Áreas \nParticipantes", "Empleados  \nParticipantes", "Cliente"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1248,6 +1287,7 @@ def getTimesheetProyectosPDF():
 
 
 ## Registros Colaboradores Tareas   #
+tituloModulo = "Reporte Módulo Colaboradores Tareas"
 def getColaboradoresTareas(
     empleado: Optional[str] = None,
     proyecto: Optional[str] = None,
@@ -1339,8 +1379,10 @@ def getColaboradoresTareasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Supervisor", "Proyecto", "Tarea", "Descripción", "Horas de \nla semana"]
+    tam_celdas =[1.5 * inch ]
+    
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1353,6 +1395,7 @@ def getColaboradoresTareasPDF():
 
 
 ## Timesheet Financiero        #
+tituloModulo = "Reporte Módulo Timesheet Financiero"
 def getTimesheetFinanciero(
     proyecto: Optional[str] = None):
 
@@ -1422,9 +1465,10 @@ def getTimesheetFinancieroPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Proyecto", "Cliente", "Área(s)", "Empleados \nParticipantes", "Horas del \nempleado", "Costo total \ndel empleado", "Empleado", "Estatus", "Horas totales \ndel proyecto", "Costo total \ndel proyecto"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1436,7 +1480,8 @@ def getTimesheetFinancieroPDF():
     return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
 
 
-## Vista global de Solicitudes de Day Off  
+## Vista global de Solicitudes de Day Off 
+tituloModulo = "Reporte Módulo Vista Global  Solicitudes de Day Off" 
 def getSolicitudesDayOff():
     query = """
             select e.name as "Solicitante",
@@ -1480,9 +1525,10 @@ def getSolicitudesDayOffPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Solicitante", "Descripción", "Año", "Diás \nsolicitados", "Inicio", "Fin", "Aprobación"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1495,6 +1541,7 @@ def getSolicitudesDayOffPDF():
 
 
 ## Vista GLobal Solicitudes de Vacaciones   #
+tituloModulo = "Reporte Módulo Vista Global Solicitudes Vacaciones"
 def getSolicitudesVacaciones():
     query = """
             select e.name as "Solicitante",
@@ -1539,9 +1586,10 @@ def getSolicitudesVacacionesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Solicitante", "Descripción", "Periodo", "Días  \nsolicitados", "Inicio", "Fin", "Aprobación"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1554,6 +1602,7 @@ def getSolicitudesVacacionesPDF():
 
 
 ## Evaluaciones 360     #
+tituloModulo = "Reporte Módulo Evaluaciones 360"
 def getEvaluaciones360():
     query = """
             select id as "ID",
@@ -1605,9 +1654,10 @@ def getEvaluaciones360PDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Nombre", "Estatus", "RFecha inicio", "Fecha fin", "¿Incluye competencias?", "¿Incluye objetivos?"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1620,6 +1670,7 @@ def getEvaluaciones360PDF():
 
 
 ## Empleados controller     #
+tituloModulo = "Reporte Módulo Empleados Controller"
 def getEmpleadoController(
     empleado: Optional[str] = None
     ):
@@ -1683,9 +1734,10 @@ def getEmpleadoControllerPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Empleado", "Supervisor", "Sede", "Perfil", "Certificaciones", "Educación"]
+    tam_celdas =[1.5 * inch ]
 
     try:
-        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, orientacion='horizontal')
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
@@ -1748,7 +1800,7 @@ def ajustar_columnas(nombre_archivo):
         raise HTTPException(
             status_code=500, detail="Column adjust error: " + str(e))
     
-def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='horizontal'):
+def generar_pdf_generalizado(datos, nombre_archivo, encabezados, tam_celdas , orientacion='horizontal'):
     # Definir la orientación de la página
     if orientacion == 'horizontal':
         pagesize = landscape(letter)
@@ -1759,22 +1811,77 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
     doc = SimpleDocTemplate(nombre_archivo, pagesize=pagesize)
     elementos = []
 
+    estilo_titulo = ParagraphStyle(
+        name='TituloTabla',
+        fontName='Roboto',
+        fontSize=16,
+        textColor=HexColor("#2E2E2E"),
+        alignment=1,  
+        spaceAfter=12,
+        borderPadding= 0 
+    )
+
+    estilo_encabezado = ParagraphStyle(
+        name='Encabezado',
+        fontName='Roboto',
+        fontSize=11,
+        textColor=HexColor("#3D3D3D"),
+        alignment=0  
+    )
+
+    estilo_encabezadoDerecha = ParagraphStyle(
+        name='Encabezado2',
+        fontName='Roboto',
+        fontSize=13,
+        textColor=HexColor("#49598A"),
+        alignment=2,
+        leftIndent= 2  
+    )
+
     estilo_normal = ParagraphStyle(
         name='Roboto',
         fontName='Roboto',
         fontSize=11,
         textColor= HexColor("#2E2E2E"),
-        alignment=0  # Centrar el texto
+        alignment=0,
+        spaceBefore=3  
     )
 
-    # Preparar los datos de la tabla
+    logo_path = "silent.png"  # Asegúrate de proporcionar la ruta correcta
+    logo = Image(logo_path, width=1.5 * inch, height=1 * inch, hAlign='LEFT')  # Ajusta el tamaño del logo
+
+    info_empresa = Paragraph("SILENT4BUSINESS. S.A. DE C.V.<br/> RFC:SIL160727HV7<br/>INSURGENTES SUR 2453 TIZAPÁN SAN ÁNGEL <br/> ÁLVARO OBREGÓN, CIUDAD DE MÉXICO. C.P.01090", estilo_encabezado)
+    
+    info_derecha = Paragraph("Reporte <br/> Fecha:", estilo_encabezadoDerecha)
+    info_derecha_bg = Table([[info_derecha]], colWidths=[2.5 * inch], rowHeights=[1 * inch])
+    info_derecha_bg.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#EEFCFF")),  # Fondo azul claro
+        ('VALIGN', (0, 0), (-1, -1), 'TOP')
+    ]))
+
+    encabezado_tabla = Table(
+        [[logo, info_empresa, info_derecha_bg]],
+        colWidths=[1.8 * inch, 4 * inch, 2.5 * inch]
+    )
+    encabezado_tabla.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0)
+    ]))
+
+    elementos.append(encabezado_tabla)
+    elementos.append(Spacer(0, 0.5 * inch))  # Espacio entre el encabezado y el título
+
+    titulo = Paragraph(tituloModulo, estilo_titulo)
+    elementos.append(titulo)
+
     datos_tabla = [encabezados] + [
         [Paragraph(str(item), estilo_normal) for item in fila]
         for fila in datos
     ]
-
-
-    tabla = Table(datos_tabla, repeatRows=1)
+    tabla = Table(datos_tabla, colWidths=tam_celdas, repeatRows=1)
+    # tabla = Table(datos_tabla, repeatRows=1)
 
     color_encabezado = HexColor("#D8F2FF") #Azul medio
     color_fila_par = HexColor("#E9E9E9")  # Gris claro
@@ -1802,17 +1909,15 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, orientacion='ho
         ('LINEAFTER', (0, 0), (-1,0), 0, '#D8F2FF')
     ])
 
-        # Alternar colores en las filass
     for i, fila in enumerate(datos_tabla[1:], start=1):
         bg_color = color_fila_par if i % 2 == 0 else color_fila_impar
         estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
 
     tabla.setStyle(estilo_tabla)
 
-    # Ajustar el ancho de las columnas automáticamente
-    num_columnas = len(encabezados)
-    for i in range(num_columnas):
-        tabla._argW[i] = 1.5 * inch  # Puedes ajustar este valor según la necesidad
+    # num_columnas = len(encabezados)
+    # for i in range(num_columnas):
+    #     tabla._argW[i] = 1.5 * inch  
 
 
     elementos.append(tabla)
