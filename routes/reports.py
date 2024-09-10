@@ -209,7 +209,7 @@ def getEmpleadosPuestosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Puesto", "Área", "Descripción"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1.8* inch, 1.8* inch, 2.5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -262,7 +262,7 @@ def getModuloRolesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "CNombre \ndel Rol"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1 * inch, 2 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -296,6 +296,7 @@ def getSoporte():
             where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
 
 @reports.get('/soporte', tags=["ReportsXls"])
 def getSoporteExcel():
@@ -318,7 +319,7 @@ def getSoportePDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Rol", "Nombre", "Puesto", "Teléfono", "Extensión", "Tel.Celular", "Correo"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch,1 * inch, 1.5 * inch,1.5 * inch, 1 * inch,1 * inch, 1 * inch, 1.5 *inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -380,7 +381,7 @@ def getModEmpleadosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["No.Empleado", "Nombre", "Email", "Teléfono", "Área", "Puesto", "Supervisor", "Antigüedad", "Estatus"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.7 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1.3 * inch, 1.5 * inch, 1 * inch,1 * inch, 0.7 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -435,7 +436,7 @@ def getSedesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Sede", "Dirección", "Descripción", "Empresa"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 1 * inch, 2.5 * inch,1 * inch,1.5 * inch, ]
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
@@ -450,7 +451,7 @@ def getSedesPDF():
 
 
 ## Niveles Jerarquicos  #
-tituloModulo = "Reporte Módulo Niveles Jerarquicos"
+tituloModulo = "Reporte Niveles Jerarquicos"
 def getNivelesJerarquicos():
     query = """
             select 
@@ -465,7 +466,7 @@ def getNivelesJerarquicos():
 @reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
 def getNivJerarquicosExcel():
     resultados = getNivelesJerarquicos()
-    fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
+    fileRoute = DirectoryEmpleados + "nivelesJerarquicos-" + str(now) + ".xlsx"
     try:
         exportar_a_excel(resultados, fileRoute)
         ajustar_columnas(fileRoute)
@@ -486,8 +487,7 @@ def getNivelesJerarquicosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Nivel", "Descripción"]
-    tam_celdas =[1.5 * inch ]
-
+    tam_celdas =[1.5 * inch]
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
@@ -542,7 +542,7 @@ def getRegAreasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Nombre \nde área", "Grupo", "Reportar a", "Descripción"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 1.3 * inch, 1 * inch, 1.3 * inch, 4.5 * inch ]
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
@@ -596,7 +596,7 @@ def getMacroProcesosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Código", "Nombre", "Grupo", "Descripción"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.8 * inch, 1.5 * inch,1 * inch,4.5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -652,7 +652,7 @@ def getModuloProcesosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Código", "Nombre del \nproceso", "Macroproceso", "Descripción"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1 * inch, 1 * inch, 1.2 * inch, 5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -704,7 +704,7 @@ def getModuloTipoActivosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Categoría"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 3 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -720,24 +720,24 @@ def getModuloTipoActivosPDF():
 
 
 ## Modulo Activos  #
-tituloModulo = "Reporte Módulo Activos"
-def getModuloActivos():
+tituloModulo = "Reporte Módulo Subcategorías de Activos"
+def getModuloSubActivos():
     query = """
             select 
-            t.id as "ID",
+            sa.id as "ID",
             t.tipo as "Categoria",
             sa.subcategoria as "Subcategoría"
             from tipoactivos t 
             inner join subcategoria_activos sa on t.id =sa.categoria_id  
-            order by t.created_at asc
+            order by sa.id asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
     return resultados
 
-@reports.get('/moduloActivos', tags=["ReportsXls"])
-def getModuloActivosExcel():
-    resultados = getModuloActivos()
-    fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
+@reports.get('/moduloSubcategoriasActivos', tags=["ReportsXls"])
+def getModuloSubcategoriasActivosExcel():
+    resultados = getModuloSubActivos()
+    fileRoute = DirectoryEmpleados + "moduloSubActivos" + str(now) + ".xlsx"
     try:
         exportar_a_excel(resultados, fileRoute)
         ajustar_columnas(fileRoute)
@@ -750,14 +750,14 @@ def getModuloActivosExcel():
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-@reports.get('/moduloActivos/pdf', tags=["ReportsPDF"])
-def getModuloActivosPDF():
-    resultados = getModuloActivos()
-    pdf_filename = f"moduloActivos_{now}.pdf"
+@reports.get('/moduloSubcategoriasActivos/pdf', tags=["ReportsPDF"])
+def getModuloSubActivosPDF():
+    resultados = getModuloSubActivos()
+    pdf_filename = f"moduloSubcategoriasActivos_{now}.pdf"
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Caregoría", "Subcategoría"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 2 * inch,3 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -816,7 +816,7 @@ def getInventarioActivosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Nombre \del activo", "Categoría", "Subcategoría", "Descripción", "Dueño", "Responsable"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.7 * inch,1.5 * inch, 1.5 * inch, 1.5 * inch, 1 * inch,1.5 * inch, 1.5 * inch ]
     
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -870,18 +870,16 @@ def getGlosarioPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Inciso", "Concepto", "Módulo", "Definición", "Explicación"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5* inch, 1 * inch, 1 * inch , 4.5* inch, 9.5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
 
-    # Verificar si el archivo se creó correctamente
     if not pdf_path.is_file():
         raise HTTPException(status_code=404, detail="PDF file not found on the server")
 
-    # Devolver el archivo para descarga
     return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
 
 
@@ -921,7 +919,7 @@ def getCategoriasCapacitacionesPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["No.", "Nombre"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 1.5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1091,7 +1089,7 @@ def getRegistrosTimesheetPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Aprovador", "Área", "Estatus", "Horas de \nla semana"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1178,7 +1176,7 @@ def getTimesheetAreasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Nombre", "Puesto","Área","Estatus", "Fecha"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[2 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1271,7 +1269,7 @@ def getTimesheetProyectosPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID-Proyecto", "Áreas \nParticipantes", "Empleados  \nParticipantes", "Cliente"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1.5 * inch, 1.5 * inch, 4.55 * inch, 1.5 * inch ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1379,8 +1377,7 @@ def getColaboradoresTareasPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Supervisor", "Proyecto", "Tarea", "Descripción", "Horas de \nla semana"]
-    tam_celdas =[1.5 * inch ]
-    
+    tam_celdas =[3 * inch ]
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
     except Exception as e:
@@ -1465,7 +1462,7 @@ def getTimesheetFinancieroPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["ID", "Proyecto", "Cliente", "Área(s)", "Empleados \nParticipantes", "Horas del \nempleado", "Costo total \ndel empleado", "Empleado", "Estatus", "Horas totales \ndel proyecto", "Costo total \ndel proyecto"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[0.5 * inch, 1 * inch , 1 * inch , 1 * inch , 1 * inch , 1 * inch  , 1 * inch , 1 * inch , 0.8 * inch , 1 * inch , 1 * inch]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1525,7 +1522,7 @@ def getSolicitudesDayOffPDF():
     pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
     encabezados = ["Solicitante", "Descripción", "Año", "Diás \nsolicitados", "Inicio", "Fin", "Aprobación"]
-    tam_celdas =[1.5 * inch ]
+    tam_celdas =[1.5 * inch,1.5 * inch ,0.7 * inch ,0.8 * inch ,1 * inch ,1 * inch ,1 * inch  ]
 
     try:
         generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, orientacion='horizontal')
@@ -1670,7 +1667,8 @@ def getEvaluaciones360PDF():
 
 
 ## Empleados controller     #
-tituloModulo = "Reporte Módulo Empleados Controller"
+
+#tituloModulo = "Reporte Módulo Empleados Controller"
 def getEmpleadoController(
     empleado: Optional[str] = None
     ):
@@ -1913,12 +1911,7 @@ def generar_pdf_generalizado(datos, nombre_archivo, encabezados, tam_celdas , or
         bg_color = color_fila_par if i % 2 == 0 else color_fila_impar
         estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
 
-    tabla.setStyle(estilo_tabla)
-
-    # num_columnas = len(encabezados)
-    # for i in range(num_columnas):
-    #     tabla._argW[i] = 1.5 * inch  
-
+    tabla.setStyle(estilo_tabla) 
 
     elementos.append(tabla)
 
