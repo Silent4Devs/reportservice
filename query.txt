@@ -1,29 +1,24 @@
 
-            select
-            tp.identificador as "ID",
-            tp.proyecto as "Proyecto",
-            tc.nombre as "Cliente",
-            a.area as "Área(s)",
-            e.name as "Empleados participantes",
-            tpe.horas_asignadas as "Horas del empleado",
-            tpe.horas_asignadas * tpe.costo_hora as "Costo total del empleado",
-            tp.estatus as "Estatus",
-                sum(tpe.horas_asignadas)over(partition by tpe.proyecto_id) as "Horas totales del proyecto",
-                sum(tpe.horas_asignadas * tpe.costo_hora) over(partition by tpe.proyecto_id) as "Costo total del Proyecto"
-            from timesheet_proyectos tp 
-            left join timesheet_clientes tc on tp.cliente_id =tc.id
-            left join timesheet_proyectos_empleados tpe on tp.id =tpe.proyecto_id 
-            left join areas a on tpe.area_id =a.id 
-            left join empleados e on tpe.empleado_id =e.id 
+            select 
+            e.name as "Empleado",
+            p.name as "Supervisor",
+            s.sede as "Sede",
+            pe.nombre as "Perfil",
+            string_agg(distinct ce.nombre, ', ' ) as "Certificaciones",
+            ee.institucion as "Educación"
+            from empleados e 
+            left join empleados p on e.supervisor_id=p.id 
+            inner join sedes s on e.sede_id=s.id
+            left join perfil_empleados pe on e.perfil_empleado_id=pe.id 
+            left join certificaciones_empleados ce on e.id=ce.empleado_id 
+            left join educacion_empleados ee on e.id=ee.empleado_id 
+            where e.estatus= 'alta'
         
         group by
-            tp.proyecto,
-            tp.identificador,
-            tc.nombre,
-            a.area,
             e.name,
-            tpe.horas_asignadas,
-            tpe.costo_hora,
-            tp.estatus,
-            tpe.proyecto_id
+            p.name,
+            s.sede,
+            pe.nombre, 
+            ee.institucion 
+        order by e.name asc;
     
