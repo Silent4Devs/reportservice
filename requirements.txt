@@ -16,3 +16,4 @@ spacy
 gensim
 fpdf
 texblob
+python-docx
