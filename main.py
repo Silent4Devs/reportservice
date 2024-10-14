@@ -6,7 +6,7 @@ import os
 from routes.reports import reports,app
 from routes.dashboards import dash
 from routes.sentiment import sentiment
-from routes.limpiezaDatos import datos
+from routes.limpiezaDB import datos
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
