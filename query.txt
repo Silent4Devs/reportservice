@@ -1,19 +1,24 @@
 
-        select
-            sum(case when t.estatus = 'aprobado' then 1 else 0 end) as "Registros Aprobados",
-            sum(case when t.estatus = 'rechazado' then 1 else 0 end) as "Registros Rechazados",
-            sum(case when t.estatus = 'pendiente' then 1 else 0 end) as "Pendiente",
-            sum(case when t.estatus = 'borrador' then 1 else 0 end) as "Borrador",
-            count(*) as "Registros Totales"
-        from (
-        select *
-        from timesheet t
-        where t.fecha_dia BETWEEN CURRENT_DATE - INTERVAL '1 MONTH' AND CURRENT_DATE
-        )t
-        left join empleados e on t.empleado_id=e.id 
-        left join areas a on e.area_id =a.id 
-        where t.estatus in ('aprobado', 'rechazado')        
-     and a.area = 'Arquitectura'
+            select 
+            e.name as "Empleado",
+            p.name as "Supervisor",
+            s.sede as "Sede",
+            pe.nombre as "Perfil",
+            string_agg(distinct ce.nombre, ', ' ) as "Certificaciones",
+            ee.institucion as "Educación"
+            from empleados e 
+            left join empleados p on e.supervisor_id=p.id 
+            inner join sedes s on e.sede_id=s.id
+            left join perfil_empleados pe on e.perfil_empleado_id=pe.id 
+            left join certificaciones_empleados ce on e.id=ce.empleado_id 
+            left join educacion_empleados ee on e.id=ee.empleado_id 
+            where e.estatus= 'alta'
+        
         group by
-            a.area
+            e.name,
+            p.name,
+            s.sede,
+            pe.nombre, 
+            ee.institucion 
+        order by e.name asc;
     

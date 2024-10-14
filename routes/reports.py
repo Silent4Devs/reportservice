@@ -1,10 +1,8 @@
 import pandas as pd
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, FileResponse
-import pandas as pd
 import psycopg2
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException
 from typing import Optional
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
@@ -15,11 +13,28 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, Query, HTTPException
 from datetime import date, datetime
 from config.database import cursor
+from fpdf import FPDF
+import textwrap
+
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
 
 app = FastAPI()
 reports = APIRouter()
 
 DirectoryEmpleados = "reportsfile/administracion/empleados/"
+
+pdfmetrics.registerFont(TTFont('Roboto', 'fonts/Roboto/Roboto-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('Roboto-Bold', 'fonts/Roboto/Roboto-Bold.ttf'))
 
 
 # Validar si la carpeta ya existe
@@ -33,41 +48,71 @@ now = date.today()
 def getEmpleados():
     return {"message": "empleados"}
 
-# Users #############
-@reports.get('/Users', tags=["ReportsXls"])
-def retrieve_all_item():
+# Users #       #
+def getUsuarios():
     query = """
-            select  
+	        select  
             e.name as "Nombre", 
             e.email as "Correo Electrónico", 
-            r.title as "Roles",
+            string_agg(distinct r.title, ', ' ) as "Roles",
             e.name as "Empleado Vinculado",
             a.area as "Área", 
-            p.puesto as "Puesto"
+            string_agg(distinct p.puesto, ', ' ) as "Puesto"
             from empleados e  
             inner join role_user ru on e.id=ru.user_id 
             inner join roles r on ru.role_id =r.id
             inner join areas a ON e.area_id=a.id
             inner join puestos p ON e.puesto_id =p.id
-            where r.deleted_at IS null
+            where r.deleted_at is null
+            group  by e.name, e.email, a.area
             order by e.name asc
         """
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "users" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    return resultados
+
+@reports.get('/usuarios/pdf', tags=["ReportsPDF"])
+def getUsuariosPDF():
+    resultados = getUsuarios()
+
+    pdf_filename = f"usuarios_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Nombre", "Correo \nElectrónico", "Roles", "Empleado  \nVinculado", "Área", "Puesto"]
+    tam_celdas =[1.5 * inch ]
+    titulo = "Reporte de Usuarios"
+
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+@reports.get('/usuarios', tags=["ReportsXls"])
+def getUsuariosExcel():
+    resultados = getUsuarios()
+    fileRoute = DirectoryEmpleados + "usuarios_" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
-    return FileResponse(excel_path)
+        raise HTTPException(status_code=404, detail="file not found on the server")
 
+    return FileResponse(excel_path, filename=f"usuarios_{now}.xlsx", media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-# Empleados Puestos
-@reports.get('/empleadosPuestos', tags=["ReportsXls"])
-def getempleadosPuestos():
+# Empleados Puestos  #
+def getEmpleadosPuestos():
     query = """
             select 
             e.name as "Empleado",
@@ -82,18 +127,49 @@ def getempleadosPuestos():
             order by e.name asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+
+@reports.get('/empleadosPuestos', tags=["ReportsXls"])
+def getEmpleadosPuestosExcel():
+    resultados=getEmpleadosPuestos()
     fileRoute = DirectoryEmpleados + "empleadosPuestos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+@reports.get('/empleadosPuestos/pdf', tags=["ReportsPDF"])
+def getEmpleadosPdf():
+    resultados = getEmpleadosPuestos()
+
+    pdf_filename = f"empleadosPuestos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Empleado", "Supervisor", "Área", "Puesto"]
+    tam_celdas =[1.5 * inch ]
+    titulo = "Reporte de Ompleados-Puestos"
+
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
     
-## Puestos
-@reports.get('/moduloPuestos', tags=["ReportsXls"])
+## Puestos  #
 def getPuestos():
     query = """
             select 
@@ -106,30 +182,69 @@ def getPuestos():
             where p.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "puestos-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    return resultados
+
+@reports.get('/moduloPuestos', tags=["ReportsXls"])
+def getEmpleadosPuestosExcel():
+    resultados=getPuestos
+    fileRoute = DirectoryEmpleados + "puestos" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+@reports.get('/moduloPuestos/pdf', tags=["ReportsPDF"])
+def getEmpleadosPuestosPDF():   
+    resultados = getPuestos()
+
+    pdf_filename = f"puestos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Puesto", "Área", "Descripción"]
+    tam_celdas =[1.8* inch, 1.8* inch, 2.5 * inch ]
+    titulo = "Reporte Módulo Puestos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
     
-    
-## Roles
-@reports.get('/moduloRoles', tags=["ReportsXls"])
+## Roles  #
 def getRoles():
     query = """
-            select r.id as "ID", r.title as "Nombre del rol"
+            select 
+                r.id as "ID", 
+                r.title as "Nombre del rol"
             from roles r 
             where r.deleted_at is null;
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "roles-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    return resultados
+
+@reports.get('/moduloRoles', tags=["ReportsXls"])
+def getModuloRolesExcel():
+    resultados = getRoles()
+    fileRoute = DirectoryEmpleados + "moduloRoles-" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
@@ -137,9 +252,32 @@ def getRoles():
     return FileResponse(excel_path)
 
 
-## Soporte
-@reports.get('/soporte', tags=["ReportsXls"])
-def getsoporte():
+@reports.get('/moduloRoles/pdf', tags=["ReportsPDF"])
+def getModuloRolesPDF():
+    resultados = getRoles()
+
+    pdf_filename = f"moduloRoles_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "CNombre \ndel Rol"]
+    tam_celdas =[1 * inch, 2 * inch ]
+    titulo = "Reporte Módulo Roles"
+
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Soporte #
+def getSoporte():
     query = """
             select 
             cs.id as "ID",
@@ -156,19 +294,46 @@ def getsoporte():
             where cs.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/soporte', tags=["ReportsXls"])
+def getSoporteExcel():
+    resultados = getSoporte
     fileRoute = DirectoryEmpleados + "soporte-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+@reports.get('/soporte/pdf', tags=["ReportsPDF"])
+def getSoportePDF():
+    resultados = getSoporte()
+    pdf_filename = f"soporte_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Rol", "Nombre", "Puesto", "Teléfono", "Extensión", "Tel.Celular", "Correo"]
+    tam_celdas =[0.5 * inch,1 * inch, 1.5 * inch,1.5 * inch, 1 * inch,1 * inch, 1 * inch, 1.5 *inch ]
+    titulo = "Reporte Módulo Soporte"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
     
-## Modulo Empleados
-@reports.get('/moduloEmpleados', tags=["ReportsXls"])
-def getmoduloEmpleados():
+## Modulo Empleados  #
+def getModuloEmpleados():
     query = """
             select 
             e.n_empleado as "No.Empleado",
@@ -188,20 +353,48 @@ def getmoduloEmpleados():
             order by e.name asc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/moduloEmpleados', tags=["ReportsXls"])
+def getModEmpleadosExcel():
+    resultados = getModuloEmpleados()
     fileRoute = DirectoryEmpleados + "empleados-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.get('/moduloEmpleados/pdf', tags=["ReportsPDF"])
+def getModEmpleadosPDF():
+    resultados = getModuloEmpleados()
 
-##  Sedes
-@reports.get('/moduloSedes', tags=["ReportsXls"])
-def getmoduloSedes():
+    pdf_filename = f"moduloEmpleados_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["No.Empleado", "Nombre", "Email", "Teléfono", "Área", "Puesto", "Supervisor", "Antigüedad", "Estatus"]
+    tam_celdas =[0.7 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1.3 * inch, 1.5 * inch, 1 * inch,1 * inch, 0.7 * inch ]
+    titulo = "Reporte Módulo Empleados"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+##  Sedes  #
+def getModuloSedes():
     query = """
             select 
             s.id as "ID",
@@ -214,38 +407,99 @@ def getmoduloSedes():
             where s.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/moduloSedes', tags=["ReportsXls"])
+def getSedesExcel():
+    resultados = getModuloSedes()
     fileRoute = DirectoryEmpleados + "sedes" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+    
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Niveles Jerarquicos
-@reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
-def getnivelesJerarquicos():
+@reports.get('/moduloSedes/pdf', tags=["ReportsPDF"])
+def getSedesPDF():
+    resultados = getModuloSedes()
+
+    pdf_filename = f"moduloSedes_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Sede", "Dirección", "Descripción", "Empresa"]
+    tam_celdas =[0.5 * inch, 1 * inch, 2.5 * inch,1 * inch,1.5 * inch, ]
+    titulo = "Reporte Módulo Sedes"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Niveles Jerarquicos  #
+def getNivelesJerarquicos():
     query = """
-            select pe.nombre as "Nivel", descripcion as "Descripción" 
+            select 
+            pe.nombre as "Nivel", 
+            descripcion as "Descripción" 
             from perfil_empleados pe  
             where pe.deleted_at is null
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "niveles-jerarquicos-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    return resultados
+
+@reports.get('/nivelesJerarquicos', tags=["ReportsXls"])
+def getNivJerarquicosExcel():
+    resultados = getNivelesJerarquicos()
+    fileRoute = DirectoryEmpleados + "nivelesJerarquicos-" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+    
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Registro de Áreas
-@reports.get('/registroAreas', tags=["ReportsXls"])
-def getregistroAreas():
+
+@reports.get('/nivelesJerarquicos/pdf', tags=["ReportsPDF"])
+def getNivelesJerarquicosPDF():
+    resultados = getNivelesJerarquicos()
+
+    pdf_filename = f"nivelesJerarquicos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Nivel", "Descripción"]
+    tam_celdas =[2.5 * inch, 1 * inch]
+    titulo = "Reporte Niveles Jerarquicos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Registro de Áreas  #
+def getRegistroAreas():
     query = """
             select 
             a.id as "ID",
@@ -259,19 +513,48 @@ def getregistroAreas():
             order by a.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/registroAreas', tags=["ReportsXls"])
+def getRegAreasExcel():
+    resultados=getRegistroAreas
     fileRoute = DirectoryEmpleados + "registroAreas-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Macroprocesos
-@reports.get('/macroProcesos', tags=["ReportsXls"])
-def getmacroProcesos():
+@reports.get('/registroAreas/pdf', tags=["ReportsPDF"])
+def getRegAreasPDF():
+    resultados = getRegistroAreas()
+    pdf_filename = f"registroAreas_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Nombre \nde área", "Grupo", "Reportar a", "Descripción"]
+    tam_celdas =[0.5 * inch, 1.3 * inch, 1 * inch, 1.3 * inch, 4.5 * inch ]
+    titulo = "Reporte Módulo Registro Áreas"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Macroprocesos  #
+def getMacroprocesos():
     query = """
             select 
             m.codigo as "Código",
@@ -284,20 +567,49 @@ def getmacroProcesos():
             order by m.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/macroProcesos', tags=["ReportsXls"])
+def getMacroProcesosExcel():
+    resultados = getMacroprocesos()
     fileRoute = DirectoryEmpleados + "macroprocesos-" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.get('/macroProcesos/pdf', tags=["ReportsPDF"])
+def getMacroProcesosPDF():
+    resultados = getMacroprocesos()
 
-## Procesos
-@reports.get('/moduloProcesos', tags=["ReportsXls"])
-def getmoduloProcesos():
+    pdf_filename = f"macroProcesos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Código", "Nombre", "Grupo", "Descripción"]
+    tam_celdas =[0.8 * inch, 1.5 * inch,1 * inch,4.5 * inch ]
+    titulo = "Reporte Módulo Macroprocesos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+
+## Procesos  #
+def getModuloProcesos():
     query = """
             select 
             p.codigo as "Código",
@@ -306,72 +618,156 @@ def getmoduloProcesos():
             p.descripcion as "Descripción"
             from procesos p 
             inner join macroprocesos m on p.id_macroproceso=m.id 
-            order by p.created_at asc
             where p.deleted_at is null
             order by p.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/moduloProcesos', tags=["ReportsXls"])
+def getModuloProcesosExcel():
+    resultados = getModuloProcesos()
     fileRoute = DirectoryEmpleados + "moduloProcesos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Modulo Tipo Activos
-@reports.get('/moduloTipoActivos', tags=["ReportsXls"])
-def getmoduloTipoActivos():
+@reports.get('/moduloProcesos/pdf', tags=["ReportsPDF"])
+def getModuloProcesosPDF():
+    resultados = getModuloProcesos()
+    pdf_filename = f"moduloProcesos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Código", "Nombre del \nproceso", "Macroproceso", "Descripción"]
+    tam_celdas =[1 * inch, 1 * inch, 1.2 * inch, 5 * inch ]
+    titulo = "Reporte Módulo Procesos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Modulo Tipo Activos #
+def getModuloTipoActivos():
     query = """
             select 
             t.id as "ID",
             t.tipo as "Categoria"
             from tipoactivos t 
-            order by t.created_at asc
             where t.deleted_at is null
             order by t.created_at asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/moduloTipoActivos', tags=["ReportsXls"])
+def getModuloTipoActivosExcel():
+    resultados = getModuloTipoActivos()
     fileRoute = DirectoryEmpleados + "moduloTipoActivos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.get('/moduloTipoActivos/pdf', tags=["ReportsPDF"])
+def getModuloTipoActivosPDF():
+    resultados = getModuloTipoActivos()
+    pdf_filename = f"moduloTipoActivos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Categoría"]
+    tam_celdas =[0.5 * inch, 3 * inch ]
+    titulo = "Reporte Módulo Tipo Activos"
+
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
 
 
-## Modulo Activos
-@reports.get('/moduloActivos', tags=["ReportsXls"])
-def getmoduloActivos():
+## Modulo Activos  #
+def getModuloSubActivos():
     query = """
             select 
-            t.id as "ID",
+            sa.id as "ID",
             t.tipo as "Categoria",
             sa.subcategoria as "Subcategoría"
             from tipoactivos t 
             inner join subcategoria_activos sa on t.id =sa.categoria_id  
-            order by t.created_at asc
+            order by sa.id asc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "moduloActivos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    return resultados
+
+@reports.get('/moduloSubcategoriasActivos', tags=["ReportsXls"])
+def getModuloSubcategoriasActivosExcel():
+    resultados = getModuloSubActivos()
+    fileRoute = DirectoryEmpleados + "moduloSubActivos" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Inventario de Activos
-@reports.get('/inventarioActivos', tags=["ReportsXls"])
-def getinventarioActivos():
+@reports.get('/moduloSubcategoriasActivos/pdf', tags=["ReportsPDF"])
+def getModuloSubActivosPDF():
+    resultados = getModuloSubActivos()
+    pdf_filename = f"moduloSubcategoriasActivos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Caregoría", "Subcategoría"]
+    tam_celdas =[0.5 * inch, 2 * inch,3 * inch ]
+    titulo = "Reporte Módulo Subcategorías de Activos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Inventario de Activos  #
+def getInventarioActivos():
     query = """
             select 
             a.id as "ID" ,
@@ -388,19 +784,48 @@ def getinventarioActivos():
             left join empleados s on e.supervisor_id=s.id 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/inventarioActivos', tags=["ReportsXls"])
+def getInventarioActivosExcel():
+    resultados = getInventarioActivos()
     fileRoute = DirectoryEmpleados + "inventarioActivos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+@reports.get('/inventarioActivos/pdf', tags=["ReportsPDF"])
+def getInventarioActivosPDF():
+    resultados = getInventarioActivos()
+    pdf_filename = f"inventarioActivos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Nombre \del activo", "Categoría", "Subcategoría", "Descripción", "Dueño", "Responsable"]
+    tam_celdas =[0.7 * inch,1.5 * inch, 1.5 * inch, 1.5 * inch, 1 * inch,1.5 * inch, 1.5 * inch ]
+    titulo = "Reporte Módulo Inventario Activos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
     
-## Glosario
-@reports.get('/glosario', tags=["ReportsXls"])
-def getglosario():
+## Glosario  #FALTA SALTO DE PÁGINA 
+def getGlosario():
     query = """
             select 
             g.numero as "Inciso",
@@ -412,107 +837,160 @@ def getglosario():
             where g.deleted_at is null 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/glosario', tags=["ReportsXls"])
+def getGlosarioExcel():
+    resultados = getGlosario()
     fileRoute = DirectoryEmpleados + "glosario" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Categorias capacitaciones 
-@reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
-def getcategoriasCapacitaciones():
+@reports.get('/glosario/pdf', tags=["ReportsPDF"])
+def getGlosarioPDF():
+    resultados = getGlosario()
+    pdf_filename = f"glosario_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Inciso", "Concepto", "Módulo", "Definición", "Explicación"]
+    tam_celdas =[0.5* inch, 1 * inch, 1 * inch , 3* inch, 3 * inch ]
+    titulo = "Reporte Módulo Glosario"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Categorias capacitaciones  #
+def getCategoriasCapacitaciones():
     query = """
             select 
-            cc.id as "No.",
-            distinct cc.nombre as "Nombre"
+            distinct cc.id as "No.",
+            cc.nombre as "Nombre"
             from recursos r 
             inner join categoria_capacitacions cc on r.categoria_capacitacion_id =cc.id
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/categoriasCapacitaciones', tags=["ReportsXls"])
+def getCategoriasCapExcel():
+    resultados = getCategoriasCapacitaciones()
     fileRoute = DirectoryEmpleados + "categoriasCapacitaciones" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Logs
-@reports.get('/visualizarLogs', tags=["ReportsXls"])
+@reports.get('/categoriasCapacitaciones/pdf', tags=["ReportsPDF"])
+def getCategoriasCapacitacionesPDF():
+    resultados = getCategoriasCapacitaciones()
+    pdf_filename = f"categoriasCapacitaciones_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["No.", "Nombre"]
+    tam_celdas =[0.5 * inch, 1.5 * inch ]
+    titulo = "Reporte Módulo Categoria Capacitaciones"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Logs  ## FALTA LIMPIEZA DE DATOS EN COLUMNAS "OLD_VALUE" Y "NEW VALUE" , SALTO DE PÁGINA ##################
 def getvisualizarLogs():
     query = """
-        select 
-        a.id as "ID",
-        u.name as "User",
-        a.event as "Event",
-        a.old_values as "Old Value",
-        a.new_values as "New Value",
-        a.url as "Url",
-        a.tags as "Tags",
-        a.created_at as "Fecha creación",
-        a.updated_at as "Fecha última actualización"
-        from audits a 
-        inner join users u on a.user_id =u.id 
-        where u.deleted_at is null
-        order by a.created_at desc
+            select 
+            a.id as "ID",
+            u.name as "User",
+            a.event as "Event",
+            a.old_values as "Old Value",
+            a.new_values as "New Value",
+            a.url as "Url",
+            a.tags as "Tags",
+            a.created_at as "Fecha creación",
+            a.updated_at as "Fecha última actualización"
+            from audits a 
+            inner join users u on a.user_id = u.id 
+            where u.deleted_at is null
+            order by a.created_at desc
         """
     resultados = ejecutar_consulta_sql(cursor, query)
-    
-    if not resultados:
-        raise HTTPException(status_code=404, detail="No data found for the query")
-    
-    # Verificar el contenido de 'resultados'
-    #print("Resultados de la consulta SQL:", resultados)
-    
-    # Crear el DataFrame y verificar los nombres de las columnas
-    df = pd.DataFrame(resultados)
-    #print("Columnas del DataFrame:", df.columns)
-    
-    def limpiar_json(columna):
-        def extraer_datos(json_str):
-            try:
-                data = json.loads(json_str)
-                result = f"id: {data['id']}, especificaciones: {data['especificaciones']}, cantidad: {data['cantidad']}"
-                return result
-            except (json.JSONDecodeError, KeyError, TypeError) as e:
-                print(f"Error procesando JSON: {e}")
-                return json_str
-        return columna.apply(extraer_datos)
-    
-    # Verificar si las columnas 'Old Value' y 'New Value' existen en el DataFrame antes de limpiarlas
-    if 'Old Value' in df.columns:
-        df['Old Value'] = limpiar_json(df['Old Value'])
-    else:
-        print("'Old Value' column not found in the data")
-        raise HTTPException(status_code=500, detail="'Old Value' column not found in the data")
-    
-    if 'New Value' in df.columns:
-        df['New Value'] = limpiar_json(df['New Value'])
-    else:
-        print("'New Value' column not found in the data")
-        raise HTTPException(status_code=500, detail="'New Value' column not found in the data")
-    
+    resultados_limpios = []
+    for row in resultados:
+        row_limpio = list(row)  # Convertimos la tupla a lista para modificarla
+        row_limpio[3] = limpiar_datos(row[3])  # old_values
+        row_limpio[4] = limpiar_datos(row[4])  # new_values
+        resultados_limpios.append(tuple(row_limpio))
+    return resultados_limpios
+
+
+@reports.post('/visualizarLogs', tags=["ReportsXls"])
+def getVisualizarLogsExcel():
+    resultados=getvisualizarLogs()
     fileRoute = DirectoryEmpleados + "visualizarLogs" + str(now) + ".xlsx"
-    df.to_excel(fileRoute, index=False)
-    exportar_a_excel(resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
-    
     if not excel_path.is_file():
-        raise HTTPException(status_code=404, detail="file not found on the server")
+        raise HTTPException(
+            status_code=404, detail="file not found on the server")
+    return FileResponse(path=fileRoute, filename=fileRoute.name)
     
-    return FileResponse(excel_path)
+@reports.post('/visualizarLogs/pdf', tags=["ReportsPDF"])
+def getVisualizarLogsPDF():
+    resultados=getvisualizarLogs()
+    pdf_filename = f"visualizarLogs_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "User", "Event", "Old Value", "New Value", "URL", "Tags", "Fecha\ncreación", "Fecha\ncreación"]
+    tam_celdas =[1.5 * inch, 1 * inch, 1 * inch, 1 * inch, 1 * inch, 2.5 * inch, 1 * inch , 2 * inch , 2 * inch ]
+    titulo = "Reporte Módulo Visualizar Logs"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
 
 
-## Registro Timesheet ## with filter
-@reports.post('/registrosTimesheet/', tags=["ReportsXls"])
-def get_registro_timesheet(
+## Registro Timesheet           #
+def getRegistroTimesheet(
     area: Optional[str] = None,
     empleado: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -556,7 +1034,7 @@ def get_registro_timesheet(
     if empleado:
         query += f" and e.name = '{empleado}'"
     if fecha_inicio and fecha_fin:
-        query += f" and t.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'"
+        query += f" and tgit.fecha_dia between '{fecha_inicio}' and '{fecha_fin}'"
 
     query += """
         group by
@@ -575,21 +1053,48 @@ def get_registro_timesheet(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    return resultados
 
+@reports.post('/registrosTimesheet/', tags=["ReportsXls"])
+def getRegistrosTimesheetExcel():
+    resultados=getRegistroTimesheet()
+    fileRoute = DirectoryEmpleados + "registroTimesheet" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
+    excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.post('/registrosTimesheet/pdf', tags=["ReportsPDF"])
+def getRegistrosTimesheetPDF():
+    resultados=getRegistroTimesheet()
+    pdf_filename = f"registroTimesheet_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
-## Timesheet Áreas  ## with filter
-@reports.post("/timesheetAreas/", tags=["ReportsXls"])
-def gettimesheetAreas(
+    encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Aprovador", "Área", "Estatus", "Horas de \nla semana"]
+    tam_celdas =[1 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch ]
+    titulo = "Reporte Módulo Registro Timesheet"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Timesheet Áreas  #
+def getTimesheetAreas(
     area: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
     fecha_fin: Optional[str] = None
@@ -634,21 +1139,49 @@ def gettimesheetAreas(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "timesheetAreas" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    return resultados
 
+@reports.post("/timesheetAreas/", tags=["ReportsXls"])
+def getTimesheetAreasExcel():
+    resultados = getTimesheetAreas()
+    fileRoute = DirectoryEmpleados + "timesheetAreas" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
+    excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.post("/timesheetAreas/pdf", tags=["ReportsPDF"])
+def getTimesheetAreasPDF():
+    resultados = getTimesheetAreas()
+    pdf_filename = f"timesheetAreas_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
-## Timesheet proyectos ## with filter
-@reports.post('/timesheetProyectos/', tags=["ReportsXls"])
-def gettimesheetProyectos(
+    encabezados = ["Nombre", "Puesto","Área","Estatus", "Fecha"]
+    tam_celdas =[2 * inch, 1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch ]
+    titulo = "Reporte Módulo Timesheet Áreas"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+
+## Timesheet proyectos  #
+def getTimesheetProyectos(
     area: Optional[str] = None,
     proyecto: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -698,20 +1231,48 @@ def gettimesheetProyectos(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.post('/timesheetProyectos/', tags=["ReportsXls"])
+def getTimesheetProyectosExcel():
+    resultados = getTimesheetProyectos()
     fileRoute = DirectoryEmpleados + "timesheetProyectos" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.post('/timesheetProyectos/pdf', tags=["ReportsPDF"])
+def getTimesheetProyectosPDF():
+    resultados = getTimesheetProyectos()
+    pdf_filename = f"timesheetProyectos_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
-## Registros Colaboradores Tareas ## with filter 
-@reports.post('/colaboradoresTareas/', tags=["ReportsXls"])
-def getcolaboradoresTareas(
+    encabezados = ["ID-Proyecto", "Áreas \nParticipantes", "Empleados  \nParticipantes", "Cliente"]
+    tam_celdas =[1.5 * inch, 1.5 * inch, 4.55 * inch, 1.5 * inch ]
+    titulo = "Reporte Módulo Timesheet Proyectos"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Registros Colaboradores Tareas   #
+def getColaboradoresTareas(
     empleado: Optional[str] = None,
     proyecto: Optional[str] = None,
     fecha_inicio: Optional[str] = None,
@@ -776,21 +1337,49 @@ def getcolaboradoresTareas(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    return resultados
 
+
+@reports.post('/colaboradoresTareas/', tags=["ReportsXls"])
+def getColaboradoresTareasExcel():
+    resultados = getColaboradoresTareas()
+    fileRoute = DirectoryEmpleados + "colaboradoresTareas" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
+    excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
+@reports.post('/colaboradoresTareas/pdf', tags=["ReportsPDF"])
+def getColaboradoresTareasPDF():
+    resultados = getColaboradoresTareas()
+    pdf_filename = f"colaboradoresTareas_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
 
-## Timesheet Financiero ## with filter
-@reports.post('/timesheetFinanciero/', tags=["ReportsXls"])
-def gettimesheetFinanciero(
+    encabezados = ["Fecha inicio", "Fecha fin", "Empleado", "Supervisor", "Proyecto", "Tarea", "Descripción", "Horas de \nla semana"]
+    tam_celdas =[3 * inch ]
+    titulo = "Reporte Módulo Colaboradores Tareas"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Timesheet Financiero        #
+def getTimesheetFinanciero(
     proyecto: Optional[str] = None):
 
     query = """
@@ -833,20 +1422,49 @@ def gettimesheetFinanciero(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    return resultados
 
+@reports.post('/timesheetFinanciero/', tags=["ReportsXls"])
+def getTimesheetFinancieroExcel():
+    resultados = getTimesheetFinanciero()
+    fileRoute = DirectoryEmpleados + "timesheetFinanciero" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+    
+    excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Vista global de Solicitudes de Day Off  ####### Integrar IF para 
-@reports.get('/solicitudesDayOff', tags=["ReportsXls"])
-def getsolicitudesDayOff():
+
+@reports.post('/timesheetFinanciero/pdf', tags=["ReportsPDF"])
+def getTimesheetFinancieroPDF():
+    resultados = getTimesheetFinanciero()
+    pdf_filename = f"timesheetFinanciero_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Proyecto", "Cliente", "Área(s)", "Empleados \nParticipantes", "Horas del \nempleado", "Costo total \ndel empleado", "Empleado", "Estatus", "Horas totales \ndel proyecto", "Costo total \ndel proyecto"]
+    tam_celdas =[0.5 * inch, 1 * inch , 1 * inch , 1 * inch , 1 * inch , 1 * inch  , 1 * inch , 1 * inch , 0.8 * inch , 1 * inch , 1 * inch]
+    titulo = "Reporte Módulo Timesheet Financiero"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Vista global de Solicitudes de Day Off 
+def getSolicitudesDayOff():
     query = """
             select e.name as "Solicitante",
             sd.descripcion as "Descripcion",
@@ -865,19 +1483,47 @@ def getsolicitudesDayOff():
             order by sd.año desc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/solicitudesDayOff', tags=["ReportsXls"])
+def getSolicitudesDayOffExcel():
+    resultados = getSolicitudesDayOff()
     fileRoute = DirectoryEmpleados + "solicitudesDayOff" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
-        raise HTTPException(
-            status_code=404, detail="file not found on the server")
+        raise HTTPException(status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Vista GLobal Solicitudes de Vacaciones
-@reports.get('/solicitudesVacaciones', tags=["ReportsXls"])
-def getsolicitudesVacaciones():
+@reports.get('/solicitudesDayOff/pdf', tags=["ReportsPDF"])
+def getSolicitudesDayOffPDF():
+    resultados = getSolicitudesDayOff()
+    pdf_filename = f"solicitudesDayOff_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Solicitante", "Descripción", "Año", "Diás \nsolicitados", "Inicio", "Fin", "Aprobación"]
+    tam_celdas =[1.5 * inch,2 * inch ,0.7 * inch ,1 * inch ,1 * inch ,1 * inch ,1 * inch  ]
+    titulo = "Reporte Módulo Vista Global  Solicitudes de Day Off" 
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Vista GLobal Solicitudes de Vacaciones   #
+def getSolicitudesVacaciones():
     query = """
             select e.name as "Solicitante",
             sv.descripcion as "Descripción",
@@ -896,19 +1542,48 @@ def getsolicitudesVacaciones():
             order by sv.fecha_inicio desc 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+
+@reports.get('/solicitudesVacaciones', tags=["ReportsXls"])
+def getSolicitudesVacacionesExcel():
+    resultados = getSolicitudesVacaciones()
     fileRoute = DirectoryEmpleados + "solicitudesVacaciones" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Evaluaciones 360
-@reports.get('/evaluaciones360', tags=["ReportsXls"])
-def getevaluaciones360():
+@reports.get('/solicitudesVacaciones/pdf', tags=["ReportsPDF"])
+def getSolicitudesVacacionesPDF():
+    resultados = getSolicitudesVacaciones()
+    pdf_filename = f"solicitudesVacaciones_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Solicitante", "Descripción", "Periodo", "Días  \nsolicitados", "Inicio", "Fin", "Aprobación"]
+    tam_celdas =[1.5 * inch, 2 * inch,0.8 * inch, 1* inch,1 * inch,1 * inch,1 * inch ]
+    titulo = "Reporte Módulo Vista Global Solicitudes Vacaciones"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Evaluaciones 360     #
+def getEvaluaciones360():
     query = """
             select id as "ID",
             nombre as "Nombre",
@@ -934,19 +1609,48 @@ def getevaluaciones360():
                 and include_objetivos = true 
         """
     resultados = ejecutar_consulta_sql(cursor, query)
+    return resultados
+    
+@reports.get('/evaluaciones360', tags=["ReportsXls"])
+def getEvaluaciones360Excel():
+    resultados = getEvaluaciones360()
     fileRoute = DirectoryEmpleados + "evaluaciones360" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
     excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
 
-## Empleados controller
-@reports.post('/empleadosController/', tags=["ReportsXls"])
-def getempleadoController(
+@reports.get('/evaluaciones360/pdf', tags=["ReportsPDF"])
+def getEvaluaciones360PDF():
+    resultados = getEvaluaciones360()
+    pdf_filename = f"evaluaciones360_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["ID", "Nombre", "Estatus", "Fecha inicio", "Fecha fin", "¿Incluye competencias?", "¿Incluye objetivos?"]
+    tam_celdas =[0.5 * inch, 2 * inch, 1 * inch, 1 * inch, 1 * inch, 1.8 * inch, 1.5 * inch ]
+    titulo = "Reporte Módulo Evaluaciones 360"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas, titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
+
+## Empleados controller     #
+def getEmpleadoController(
     empleado: Optional[str] = None
     ):
     
@@ -984,16 +1688,45 @@ def getempleadoController(
         file.write(query)
 
     resultados = ejecutar_consulta_sql(cursor, query)
-    fileRoute = DirectoryEmpleados + "empleadoController" + str(now) + ".xlsx"
-    exportar_a_excel(
-        resultados, fileRoute)
-    ajustar_columnas(fileRoute)
-    excel_path = Path(fileRoute)
+    return resultados
 
+@reports.post('/empleadosController/', tags=["ReportsXls"])
+def getEmpleadoControllerExcel():
+    resultados = getEmpleadoController()
+    fileRoute = DirectoryEmpleados + "empleadoController" + str(now) + ".xlsx"
+    try:
+        exportar_a_excel(resultados, fileRoute)
+        ajustar_columnas(fileRoute)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar Excel: {str(e)}")
+
+    excel_path = Path(fileRoute)
     if not excel_path.is_file():
         raise HTTPException(
             status_code=404, detail="file not found on the server")
     return FileResponse(excel_path)
+
+@reports.post('/empleadosController/pdf', tags=["ReportsPDF"])
+def getEmpleadoControllerPDF():
+    resultados = getEmpleadoController()
+    pdf_filename = f"empleadosController_{now}.pdf"
+    pdf_path = Path(DirectoryEmpleados) / pdf_filename
+
+    encabezados = ["Empleado", "Supervisor", "Sede", "Perfil", "Certificaciones", "Educación"]
+    tam_celdas =[1 * inch, 1 * inch, 1 * inch, 1.2 * inch, 2.5 * inch, 4.5 * inch]
+    titulo = "Reporte Módulo Empleados Controller"
+    try:
+        generar_pdf_generalizado(resultados, str(pdf_path), encabezados, tam_celdas,titulo, orientacion='horizontal')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar PDF: {str(e)}")
+
+    # Verificar si el archivo se creó correctamente
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found on the server")
+
+    # Devolver el archivo para descarga
+    return FileResponse(path=str(pdf_path), filename=pdf_filename, media_type='application/pdf')
+
 
 ########
 
@@ -1045,3 +1778,142 @@ def ajustar_columnas(nombre_archivo):
         print("No se pudieron ajustar las columnas debido a un error." + str(e))
         raise HTTPException(
             status_code=500, detail="Column adjust error: " + str(e))
+
+def limpiar_datos(valores):
+    if isinstance(valores, str):
+        try:
+            data = json.loads(valores)
+            if isinstance(data, list) and len(data) == 0:
+                return None
+            if isinstance(data, dict):
+                if "Remember token" in data.values():
+                    return valores  
+                else:
+                    return None 
+        except json.JSONDecodeError:
+            return None
+    return None
+
+def generar_pdf_generalizado(datos, nombre_archivo, encabezados, tam_celdas ,titulo, orientacion='horizontal'):
+    if orientacion == 'horizontal':
+        pagesize = landscape(letter)
+    else:
+        pagesize = letter
+
+    doc = SimpleDocTemplate(nombre_archivo, pagesize=pagesize)
+    elementos = []
+
+    estilo_titulo = ParagraphStyle(
+        name='TituloTabla',
+        fontName='Roboto',
+        fontSize=16,
+        textColor=HexColor("#2E2E2E"),
+        alignment=1,  
+        spaceAfter=12,
+        borderPadding= 0 
+    )
+
+    estilo_encabezado = ParagraphStyle(
+        name='Encabezado',
+        fontName='Roboto',
+        fontSize=11,
+        textColor=HexColor("#3D3D3D"),
+        alignment=0  
+    )
+
+    estilo_encabezadoDerecha = ParagraphStyle(
+        name='Encabezado2',
+        fontName='Roboto',
+        fontSize=13,
+        textColor=HexColor("#49598A"),
+        alignment=2,
+        leftIndent= 2  
+    )
+
+    estilo_normal = ParagraphStyle(
+        name='Roboto',
+        fontName='Roboto',
+        fontSize=11,
+        textColor= HexColor("#2E2E2E"),
+        alignment=0,
+        spaceBefore=3, 
+        wordWrap= 'CJK'
+    )
+
+    logo_path = "silent.png"  # Asegúrate de proporcionar la ruta correcta
+    logo = Image(logo_path, width=1.5 * inch, height=1 * inch, hAlign='LEFT')  # Ajusta el tamaño del logo
+
+    info_empresa = Paragraph("SILENT4BUSINESS. S.A. DE C.V.<br/> RFC:SIL160727HV7<br/>INSURGENTES SUR 2453 TIZAPÁN SAN ÁNGEL <br/> ÁLVARO OBREGÓN, CIUDAD DE MÉXICO. C.P.01090", estilo_encabezado)
+    
+    info_derecha = Paragraph("Reporte <br/> Fecha:", estilo_encabezadoDerecha)
+    info_derecha_bg = Table([[info_derecha]], colWidths=[2.5 * inch], rowHeights=[1 * inch])
+    info_derecha_bg.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), HexColor("#EEFCFF")),  # Fondo azul claro
+        ('VALIGN', (0, 0), (-1, -1), 'TOP')
+    ]))
+
+    encabezado_tabla = Table(
+        [[logo, info_empresa, info_derecha_bg]],
+        colWidths=[1.8 * inch, 4 * inch, 2.5 * inch]
+    )
+    encabezado_tabla.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0)
+    ]))
+
+    elementos.append(encabezado_tabla)
+    elementos.append(Spacer(0, 0.5 * inch))  # Espacio entre el encabezado y el título
+
+    titulo_paragraph = Paragraph(titulo, estilo_titulo)
+    elementos.append(titulo_paragraph)
+
+    datos_tabla = [encabezados] + [
+        [Paragraph(str(item), estilo_normal) for item in fila]
+        for fila in datos
+    ]
+    tabla = Table(datos_tabla, colWidths=tam_celdas, repeatRows=1)
+    # tabla = Table(datos_tabla, repeatRows=1)
+
+    color_encabezado = HexColor("#D8F2FF") #Azul medio
+    color_fila_par = HexColor("#E9E9E9")  # Gris claro
+    color_fila_impar =  HexColor("#FFFFFF")    #Blanco
+    color_texto_encabezado = HexColor("#575757")  #Gris medio
+    color_borde = HexColor('#CCCCCC')
+
+    # Estilo de la tabla
+    estilo_tabla = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), color_encabezado),
+        ('TEXTCOLOR', (0, 0), (-1, 0), color_texto_encabezado),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Roboto'),
+        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 11),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Roboto'),
+        ('FONTSIZE', (0, 1), (-1, -1), 12),
+        ('TOPPADDING', (0, 1), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 11),
+        ('GRID', (0, 0), (-1, -1), 1, color_borde),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LINEBEFORE', (0, 0), (-1,0), 0, '#D8F2FF'),
+        ('LINEAFTER', (0, 0), (-1,0), 0, '#D8F2FF')
+    ])
+
+    for i, fila in enumerate(datos_tabla[1:], start=1):
+        bg_color = color_fila_par if i % 2 == 0 else color_fila_impar
+        estilo_tabla.add('BACKGROUND', (0, i), (-1, i), bg_color)
+
+    tabla.setStyle(estilo_tabla) 
+
+    elementos.append(tabla)
+
+    tabla.splitByRow = True
+
+    if len(datos_tabla) > 30:  # Ajusta según tus necesidades
+        elementos.append(PageBreak())
+    # Generar el PDF
+    doc.build(elementos)
+
