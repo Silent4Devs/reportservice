@@ -16,6 +16,8 @@ COPY requirements.txt .
 # Install the Python dependencies
 RUN pip install -r requirements.txt
 
+RUN python -m spacy download en_core_web_lg
+
 # Copy the application code to the working directory
 COPY . .
 

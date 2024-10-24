@@ -4,8 +4,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 import os
 from routes.reports import reports,app
-#from dashboards import dash
-
+from routes.dashboards import dash
+from routes.sentiment import sentiment
+from routes.limpiezaDB import datos
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
@@ -15,8 +16,9 @@ app.title = os.getenv("APP_NAME")
 app.version = os.getenv("APP_VERSION")
 
 app.include_router(reports)
-#app.include_router(dash)
-
+app.include_router(dash)
+app.include_router(sentiment)
+app.include_router(datos)
 # tags=["Home"] es una etiqueta que se le asigna a la ruta para poder agruparla en la documentación
 
 
@@ -24,11 +26,3 @@ app.include_router(reports)
 def message():
     return {"Hello World!"}
 
-
-@app.get('/movies', tags=["Movies"])
-def movies():
-    return JSONResponse(content={"message": "movies"})
-
-@app.post('/', tags=["ReportsXls"])
-def read_root():
-    return {"message": "Hi"}
