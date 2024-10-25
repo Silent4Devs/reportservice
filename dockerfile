@@ -2,9 +2,17 @@
 FROM python:3.12
 
 # Install required libraries and compilers, including additional dependencies
-RUN apt-get update && \
-    apt-get install -y libpq-dev gcc g++ gfortran libgfortran5 pkg-config libopenblas-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -qq \
+    && apt-get install --no-install-recommends --yes \
+        build-essential \
+        default-libmysqlclient-dev \
+        # Necessary for mysqlclient runtime. Do not remove.
+        libmariadb3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m pip install --no-cache-dir mysqlclient \
+    && apt-get autoremove --purge --yes \
+        build-essential \
+        default-libmysqlclient-dev
 
 # Set the working directory inside the container
 WORKDIR /app
