@@ -1,5 +1,5 @@
 # Use the official Python base image
-FROM python:3.12-slim
+FROM python:3.12
 
 # Install required libraries and compilers, including additional dependencies
 RUN apt-get update && \
@@ -15,7 +15,7 @@ COPY .env.example .env
 COPY requirements.txt .
 
 # Install Python dependencies from requirements.txt
-RUN CFLAGS="-O2 -march=native" pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
 
 RUN python -m spacy download en_core_web_lg
 
