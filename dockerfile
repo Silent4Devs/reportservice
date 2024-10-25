@@ -1,7 +1,10 @@
 # Use the official Python base image
 FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+# Install required libraries and compilers, including g++ for packages like scipy
+RUN apt-get update && \
+    apt-get install -y libpq-dev gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /app
