@@ -14,5 +14,5 @@ keybert
 spacy 
 gensim
 fpdf
-texblob
+textblob
 python-docx
