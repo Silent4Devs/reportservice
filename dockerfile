@@ -1,9 +1,9 @@
 # Use the official Python base image
 FROM python:3.12-slim
 
-# Install required libraries and compilers, including g++ for packages like scipy
+# Install required libraries and compilers, including g++, gfortran for scientific libraries
 RUN apt-get update && \
-    apt-get install -y libpq-dev gcc g++ && \
+    apt-get install -y libpq-dev gcc g++ gfortran && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
