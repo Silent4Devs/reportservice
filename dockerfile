@@ -1,9 +1,9 @@
 # Use the official Python base image
 FROM python:3.12-slim
 
-# Install required libraries and compilers, including g++, gfortran for scientific libraries
+# Install required libraries and compilers, including pkg-config and OpenBLAS
 RUN apt-get update && \
-    apt-get install -y libpq-dev gcc g++ gfortran && \
+    apt-get install -y libpq-dev gcc g++ gfortran pkg-config libopenblas-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
