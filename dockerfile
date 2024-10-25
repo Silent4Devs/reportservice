@@ -11,10 +11,10 @@ COPY .env.example .env
 # Copy the requirements file to the working directory
 COPY requirements.txt .
 
-# RUN pip install uv 
-# RUN uv venv
+RUN pip install
+#RUN uv venv
 # Install the Python dependencies
-RUN pip install -r requirements.txt
+#RUN uv pip install -r requirements.txt
 
 RUN python -m spacy download en_core_web_lg
 
