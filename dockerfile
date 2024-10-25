@@ -1,9 +1,9 @@
 # Use the official Python base image
 FROM python:3.12-slim
 
-# Install required libraries and compilers, including pkg-config and OpenBLAS
+# Install required libraries and compilers, including additional dependencies
 RUN apt-get update && \
-    apt-get install -y libpq-dev gcc g++ gfortran pkg-config libopenblas-dev && \
+    apt-get install -y libpq-dev gcc g++ gfortran libgfortran5 pkg-config libopenblas-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -15,7 +15,7 @@ COPY .env.example .env
 COPY requirements.txt .
 
 # Install Python dependencies from requirements.txt
-RUN pip install -r requirements.txt
+RUN CFLAGS="-O2 -march=native" pip install -r requirements.txt
 
 RUN python -m spacy download en_core_web_lg
 
