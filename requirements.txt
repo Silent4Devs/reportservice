@@ -2,7 +2,6 @@ fastapi
 uvicorn
 python-dotenv
 sqlalchemy
-psycopg2-binary
 pandas
 openpyxl
 psycopg2-binary
@@ -12,8 +11,7 @@ beautifulsoup4
 lxml
 scikit-learn
 keybert
-spacy 
 gensim
 fpdf
-texblob
+textblob
 python-docx
