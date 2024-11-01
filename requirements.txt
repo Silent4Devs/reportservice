@@ -3,6 +3,7 @@ uvicorn
 python-dotenv
 sqlalchemy
 pandas
+reportlab
 openpyxl
 psycopg2-binary
 plotly
