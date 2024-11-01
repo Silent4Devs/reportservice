@@ -16,4 +16,3 @@ gensim
 fpdf
 textblob
 python-docx
-spacy
